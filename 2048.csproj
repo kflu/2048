@@ -71,6 +71,7 @@
     <None Include=".git\packed-refs" />
     <None Include=".git\refs\heads\master" />
     <None Include=".git\refs\remotes\origin\HEAD" />
+    <None Include="LICENSE" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
