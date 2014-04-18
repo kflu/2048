@@ -1,29 +1,50 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Kfl.Game2048
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     class Program
     {
-        static private readonly Random random = new Random();
-
         static void Main(string[] args)
         {
+            Game game = new Game();
+            game.Run();
+        }
+    }
+
+    class Game
+    {
+        public ulong Score { get; private set; }
+        public ulong[,] Board { get; private set; }
+
+        private readonly int nRows;
+        private readonly int nCols;
+        private readonly Random random = new Random();
+        
+        public Game()
+        {
+            this.Board = new ulong[4, 4];
+            this.nRows = this.Board.GetLength(0);
+            this.nCols = this.Board.GetLength(1);
+            this.Score = 0;
+        }
+
+        public void Run()
+        {
             bool hasUpdated = true;
-            int[,] canvas = new int[4, 4];
             do
             {
                 if (hasUpdated)
                 {
-                    PutNewValue(canvas);
+                    PutNewValue();
                 }
 
-                Display(canvas);
+                Display();
 
-                if (IsDead(canvas))
+                if (IsDead())
                 {
                     using (new ColorOutput(ConsoleColor.Red))
                     {
@@ -39,19 +60,19 @@ namespace Kfl.Game2048
                 switch (input.Key)
                 {
                     case ConsoleKey.UpArrow:
-                        hasUpdated = Update(canvas, Direction.Up);
+                        hasUpdated = Update(Direction.Up);
                         break;
 
                     case ConsoleKey.DownArrow:
-                        hasUpdated = Update(canvas, Direction.Down);
+                        hasUpdated = Update(Direction.Down);
                         break;
 
                     case ConsoleKey.LeftArrow:
-                        hasUpdated = Update(canvas, Direction.Left);
+                        hasUpdated = Update(Direction.Left);
                         break;
 
                     case ConsoleKey.RightArrow:
-                        hasUpdated = Update(canvas, Direction.Right);
+                        hasUpdated = Update(Direction.Right);
                         break;
 
                     default:
@@ -65,24 +86,7 @@ namespace Kfl.Game2048
             Console.Read();
         }
 
-        #region Utility methods
-
-        private static bool IsDead(int[,] canvas)
-        {
-            foreach (Direction dir in new Direction[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right })
-            {
-                int[,] clone = (int[,])canvas.Clone();
-                if (Update(clone, dir))
-                {
-                    return false;
-                }
-            }
-
-            // tried all directions. none worked.
-            return true;
-        }
-
-        private static ConsoleColor GetNumberColor(int num)
+        private static ConsoleColor GetNumberColor(ulong num)
         {
             switch (num)
             {
@@ -113,34 +117,12 @@ namespace Kfl.Game2048
             }
         }
 
-        private static void Display(int[,] canvas)
+        private static bool Update(ulong[,] board, Direction direction, out ulong score)
         {
-            int nRows = canvas.GetLength(0);
-            int nCols = canvas.GetLength(1);
+            int nRows = board.GetLength(0);
+            int nCols = board.GetLength(1);
 
-            Console.Clear();
-            Console.WriteLine();
-            for (int i = 0; i < nRows; i++)
-            {
-                for (int j = 0; j < nCols; j++)
-                {
-                    using (new ColorOutput(GetNumberColor(canvas[i, j])))
-                    {
-                        Console.Write(string.Format("{0,6}", canvas[i, j]));
-                    }
-                }
-
-                Console.WriteLine();
-                Console.WriteLine();
-            }
-
-            Console.WriteLine();
-        }
-
-        private static bool Update(int[,] canvas, Direction direction)
-        {
-            int nRows = canvas.GetLength(0);
-            int nCols = canvas.GetLength(1);
+            score = 0;
             bool hasUpdated = false;
 
             // You shouldn't be dead at this point. We always check if you're dead at the end of the Update()
@@ -153,28 +135,33 @@ namespace Kfl.Game2048
 
             int outterCount = isAlongRow ? nRows : nCols;
             int innerCount = isAlongRow ? nCols : nRows;
-
             int innerStart = isIncreasing ? 0 : innerCount - 1;
             int innerEnd = isIncreasing ? innerCount - 1 : 0;
-            Func<int, int> drop = isIncreasing ? new Func<int, int>(innerIndex => innerIndex - 1) : new Func<int, int>(innerIndex => innerIndex + 1);
-            Func<int, int> reverseDrop = isIncreasing ? new Func<int, int>(innerIndex => innerIndex + 1) : new Func<int, int>(innerIndex => innerIndex - 1);
+
+            Func<int, int> drop = isIncreasing 
+                ? new Func<int, int>(innerIndex => innerIndex - 1) 
+                : new Func<int, int>(innerIndex => innerIndex + 1);
+
+            Func<int, int> reverseDrop = isIncreasing 
+                ? new Func<int, int>(innerIndex => innerIndex + 1) 
+                : new Func<int, int>(innerIndex => innerIndex - 1);
+
+            Func<ulong[,], int, int, ulong> getValue = isAlongRow
+                ? new Func<ulong[,], int, int, ulong>((x, i, j) => x[i, j])
+                : new Func<ulong[,], int, int, ulong>((x, i, j) => x[j, i]);
+
+            Action<ulong[,], int, int, ulong> setValue = isAlongRow
+                ? new Action<ulong[,], int, int, ulong>((x, i, j, v) => x[i, j] = v)
+                : new Action<ulong[,], int, int, ulong>((x, i, j, v) => x[j, i] = v);
 
             Func<int, bool> innerCondition = index => Math.Min(innerStart, innerEnd) <= index && index <= Math.Max(innerStart, innerEnd);
-
-            Func<int[,], int, int, int> getValue = isAlongRow
-                ? new Func<int[,], int, int, int>((x, i, j) => x[i, j])
-                : new Func<int[,], int, int, int>((x, i, j) => x[j, i]);
-
-            Action<int[,], int, int, int> setValue = isAlongRow
-                ? new Action<int[,], int, int, int>((x, i, j, v) => x[i, j] = v)
-                : new Action<int[,], int, int, int>((x, j, i, v) => x[i, j] = v);
 
             for (int i = 0; i < outterCount; i++)
             {
                 bool mergeOccurred = false;
                 for (int j = innerStart; innerCondition(j); j = reverseDrop(j))
                 {
-                    if (getValue(canvas, i, j) == 0)
+                    if (getValue(board, i, j) == 0)
                     {
                         continue;
                     }
@@ -185,20 +172,19 @@ namespace Kfl.Game2048
                         newJ = drop(newJ);
                     }
                     // Continue probing along as long as we haven't hit the boundary and the new position isn't occupied
-                    while (innerCondition(newJ) && getValue(canvas, i, newJ) == 0);
+                    while (innerCondition(newJ) && getValue(board, i, newJ) == 0);
 
-                    if (innerCondition(newJ) && !mergeOccurred && getValue(canvas, i, newJ) == getValue(canvas, i, j))
+                    if (innerCondition(newJ) && !mergeOccurred && getValue(board, i, newJ) == getValue(board, i, j))
                     {
                         // We did not hit the canvas boundary (we hit a node) AND no previous merge occurred AND the nodes' values are the same
                         // Let's merge
+                        ulong newValue = getValue(board, i, newJ) * 2;
+                        setValue(board, i, newJ, newValue);
+                        setValue(board, i, j, 0);
+
                         mergeOccurred = true;
-                        setValue(
-                            canvas,
-                            i,
-                            newJ,
-                            2 * getValue(canvas, i, newJ));
-                        setValue(canvas, i, j, 0);
                         hasUpdated = true;
+                        score += newValue;
                     }
                     else
                     {
@@ -214,9 +200,9 @@ namespace Kfl.Game2048
                             hasUpdated = true;
                         }
 
-                        int value = getValue(canvas, i, j);
-                        setValue(canvas, i, j, 0);
-                        setValue(canvas, i, newJ, value);
+                        ulong value = getValue(board, i, j);
+                        setValue(board, i, j, 0);
+                        setValue(board, i, newJ, value);
                     }
                 }
             }
@@ -224,18 +210,61 @@ namespace Kfl.Game2048
             return hasUpdated;
         }
 
-        private static void PutNewValue(int[,] canvas)
+        private bool Update(Direction dir)
         {
-            int nRows = canvas.GetLength(0);
-            int nCols = canvas.GetLength(1);
+            ulong score;
+            bool isUpdated = Game.Update(this.Board, dir, out score);
+            this.Score += score;
+            return isUpdated;
+        }
 
+        private bool IsDead()
+        {
+            ulong score;
+            foreach (Direction dir in new Direction[] { Direction.Down, Direction.Up, Direction.Left, Direction.Right })
+            {
+                ulong[,] clone = (ulong[,])Board.Clone();
+                if (Game.Update(clone, dir, out score))
+                {
+                    return false;
+                }
+            }
+
+            // tried all directions. none worked.
+            return true;
+        }
+
+        private void Display()
+        {
+            Console.Clear();
+            Console.WriteLine();
+            for (int i = 0; i < nRows; i++)
+            {
+                for (int j = 0; j < nCols; j++)
+                {
+                    using (new ColorOutput(Game.GetNumberColor(Board[i, j])))
+                    {
+                        Console.Write(string.Format("{0,6}", Board[i, j]));
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("Score: {0}", this.Score);
+            Console.WriteLine();
+        }
+
+        private void PutNewValue()
+        {
             // Find all empty slots
             List<Tuple<int, int>> emptySlots = new List<Tuple<int, int>>();
             for (int iRow = 0; iRow < nRows; iRow++)
             {
                 for (int iCol = 0; iCol < nCols; iCol++)
                 {
-                    if (canvas[iRow, iCol] == 0)
+                    if (Board[iRow, iCol] == 0)
                     {
                         emptySlots.Add(new Tuple<int, int>(iRow, iCol));
                     }
@@ -244,14 +273,11 @@ namespace Kfl.Game2048
 
             // We should have at least 1 empty slot. Since we know the user is not dead
             int iSlot = random.Next(0, emptySlots.Count); // randomly pick an empty slot
-            int value = random.Next(0, 100) < 95 ? 2 : 4; // randomly pick 2 (with 95% chance) or 4 (rest of the chance)
-            canvas[emptySlots[iSlot].Item1, emptySlots[iSlot].Item2] = value;
+            ulong value = random.Next(0, 100) < 95 ? (ulong)2 : (ulong)4; // randomly pick 2 (with 95% chance) or 4 (rest of the chance)
+            Board[emptySlots[iSlot].Item1, emptySlots[iSlot].Item2] = value;
         }
 
-        #endregion Utility methods
-
-        #region Utility classes
-
+        #region Utility Classes
         enum Direction
         {
             Up,
@@ -273,7 +299,6 @@ namespace Kfl.Game2048
                 Console.ResetColor();
             }
         }
-
-        #endregion Utility classes
+        #endregion Utility Classes
     }
 }
