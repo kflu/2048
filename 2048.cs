@@ -158,7 +158,6 @@ namespace Kfl.Game2048
 
             for (int i = 0; i < outterCount; i++)
             {
-                bool mergeOccurred = false;
                 for (int j = innerStart; innerCondition(j); j = reverseDrop(j))
                 {
                     if (getValue(board, i, j) == 0)
@@ -174,7 +173,7 @@ namespace Kfl.Game2048
                     // Continue probing along as long as we haven't hit the boundary and the new position isn't occupied
                     while (innerCondition(newJ) && getValue(board, i, newJ) == 0);
 
-                    if (innerCondition(newJ) && !mergeOccurred && getValue(board, i, newJ) == getValue(board, i, j))
+                    if (innerCondition(newJ) && getValue(board, i, newJ) == getValue(board, i, j))
                     {
                         // We did not hit the canvas boundary (we hit a node) AND no previous merge occurred AND the nodes' values are the same
                         // Let's merge
@@ -182,7 +181,6 @@ namespace Kfl.Game2048
                         setValue(board, i, newJ, newValue);
                         setValue(board, i, j, 0);
 
-                        mergeOccurred = true;
                         hasUpdated = true;
                         score += newValue;
                     }
