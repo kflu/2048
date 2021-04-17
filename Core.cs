@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using static Core_2048.Utils;
+
 
 namespace Core_2048
 {
@@ -8,9 +10,9 @@ namespace Core_2048
     public delegate int ChangeElement(Element element);
     public delegate void ActionByElement(Element element);
     public delegate int MergeElements(int newValue, int oldValue);
-    internal delegate int Drop(int index);
-    internal delegate Element GetValue(int outerItem, int innerItem);
-    internal delegate void SetValue(int outerItem, int innerItem, int value);
+    public delegate int Drop(int index);
+    public delegate Element GetValue(int outerItem, int innerItem);
+    public delegate void SetValue(int outerItem, int innerItem, int value);
 
     public class Core
     {
@@ -64,8 +66,8 @@ namespace Core_2048
 
             var drop = DropFactory(isIncreasing);
             var reverseDrop = DropFactory(!isIncreasing);
-            var getValue = GetValueFactory(isAlongRow);
-            var setValue = SetValueFactory(isAlongRow);
+            var getValue = GetValueFactory(isAlongRow, _elements);
+            var setValue = SetValueFactory(isAlongRow, _elements);
 
             for (var outerItem = 0; outerItem < outerCount; outerItem++)
             {
@@ -179,39 +181,6 @@ namespace Core_2048
         public bool Include(Element element)
         {
             return _elements[element.Row, element.Column] == element.Value;
-        }
-
-        private static Drop DropFactory(bool isIncreasing)
-        {
-            return isIncreasing
-                ? new Drop(innerIndex => innerIndex - 1)
-                : innerIndex => innerIndex + 1;
-        }
-
-        private GetValue GetValueFactory(bool isAlongRow)
-        {
-            return isAlongRow
-                ? new GetValue((outerItem, innerItem) =>
-                    new Element(outerItem, innerItem, _elements[outerItem, innerItem]))
-                : (outerItem, innerItem) =>
-                    new Element(innerItem, outerItem, _elements[innerItem, outerItem]);
-        }
-
-        private SetValue SetValueFactory(bool isAlongRow)
-        {
-            return isAlongRow
-                ? new SetValue((outerItem, innerItem, value) =>
-                    _elements[outerItem, innerItem] = value)
-                : (outerItem, innerItem, value) =>
-                    _elements[innerItem, outerItem] = value;
-        }
-
-        private static bool IsInnerCondition(int index, int innerStart, int innerEnd)
-        {
-            var minIndex = Math.Min(innerStart, innerEnd);
-            var maxIndex = Math.Max(innerStart, innerEnd);
-
-            return minIndex <= index && index <= maxIndex;
         }
 
         private int CalculateNewItem(int innerItem, Drop drop, int innerStart, int innerEnd, GetValue getValue, int outerItem)
