@@ -24,8 +24,8 @@ namespace Core_2048
         public static SetValue SetValueFactory(bool isAlongRow, int[,] elements)
         {
             return isAlongRow
-                ? new SetValue(((outerItem, innerItem, value) =>
-                    elements[outerItem, innerItem] = value))
+                ? new SetValue((outerItem, innerItem, value) =>
+                    elements[outerItem, innerItem] = value)
                 : (outerItem, innerItem, value) =>
                     elements[innerItem, outerItem] = value;
         }
