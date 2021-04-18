@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using static Core_2048.Utils;
-
+using JetBrains.Annotations;
 
 namespace Core_2048
 {
@@ -57,60 +56,20 @@ namespace Core_2048
 
         public void UpdateElements(bool isAlongRow, bool isIncreasing)
         {
-            var outerCount = isAlongRow ? Height : Width;
-            var innerCount = isAlongRow ? Width : Height;
-            var innerStart = isIncreasing ? 0 : innerCount - 1;
-            var innerEnd = isIncreasing ? innerCount - 1 : 0;
-
             HasUpdated = false;
-            var updatingMap = new Dictionary<Element, Element>();
+            UpdatingMap = new Dictionary<Element, Element>();
 
-            var drop = DropFactory(isIncreasing);
-            var reverseDrop = DropFactory(!isIncreasing);
-            var getValue = GetValueFactory(isAlongRow, _elements);
-            var setValue = SetValueFactory(isAlongRow, _elements);
-
-            for (var outerItem = 0; outerItem < outerCount; outerItem++)
+            var updateLoop = new UpdateLoop(isAlongRow, isIncreasing, Height, Width, _elements, _baseValue);
+            var hasUpdating = updateLoop.Loop(_mergeElements);
+            if (hasUpdating != null)
             {
-                for (var innerItem = innerStart;
-                     IsInnerCondition(innerItem, innerStart, innerEnd);
-                     innerItem = reverseDrop(innerItem))
-                {
-                    if (getValue(outerItem, innerItem).Value == _baseValue) continue;
-
-                    var newInnerItem = CalculateNewItem(innerItem, drop, innerStart, innerEnd, getValue, outerItem);
-                    var isInnerCondition = IsInnerCondition(newInnerItem, innerStart, innerEnd);
-
-                    if (isInnerCondition
-                        && getValue(outerItem, newInnerItem).Value == getValue(outerItem, innerItem).Value)
-                    {
-                        var newElement = _mergeElements(
-                            getValue(outerItem, newInnerItem).Value,
-                            getValue(outerItem, innerItem).Value
-                        );
-                        setValue(outerItem, newInnerItem, newElement);
-                        setValue(outerItem, innerItem, _baseValue);
-                        HasUpdated = true;
-                        updatingMap.Add(getValue(outerItem, innerItem), getValue(outerItem, newInnerItem));
-                        Score += newElement;
-                    }
-                    else
-                    {
-                        newInnerItem = reverseDrop(newInnerItem);
-
-                        var element = getValue(outerItem, innerItem);
-                        setValue(outerItem, innerItem, _baseValue);
-                        setValue(outerItem, newInnerItem, element.Value);
-
-                        if (newInnerItem == innerItem) continue;
-
-                        HasUpdated = true;
-                        updatingMap.Add(getValue(outerItem, innerItem), getValue(outerItem, newInnerItem));
-                    }
-                }
+                HasUpdated = true;
+                UpdatingMap = hasUpdating;
             }
-
-            UpdatingMap = updatingMap;
+            else
+            {
+                UpdatingMap = new Dictionary<Element, Element>();
+            }
         }
 
         public bool CheckIfEmpty(int row, int column)
@@ -139,6 +98,7 @@ namespace Core_2048
             return result;
         }
 
+        [CanBeNull]
         public Element NewElement()
         {
             var empties = new List<Tuple<int, int>>();
@@ -157,6 +117,11 @@ namespace Core_2048
             var value = _random.Next(0, 100) < ChanceBetterValue
                 ? StandardNewValue
                 : BetterNewValue;
+            if (empties.Count == 0)
+            {
+                return null;
+            }
+
             var (randomRow, randomColumn) = empties[index];
 
             return new Element(randomRow, randomColumn, value);
@@ -178,7 +143,7 @@ namespace Core_2048
             {
                 for (int column = 0; column < Width; column++)
                 {
-                    mapper(new Element(row, column, GetValue(column, row)));
+                    mapper(new Element(row, column, GetValue(row, column)));
                 }
             }
         }
@@ -186,19 +151,6 @@ namespace Core_2048
         public bool Include(Element element)
         {
             return _elements[element.Row, element.Column] == element.Value;
-        }
-
-        private int CalculateNewItem(int innerItem, Drop drop, int innerStart, int innerEnd, GetValue getValue,
-            int outerItem)
-        {
-            var newInnerItem = innerItem;
-            do
-            {
-                newInnerItem = drop(newInnerItem);
-            } while (IsInnerCondition(newInnerItem, innerStart, innerEnd)
-                     && getValue(outerItem, newInnerItem).Value == _baseValue);
-
-            return newInnerItem;
         }
     }
 
