@@ -37,7 +37,7 @@ namespace Core_2048
             Width = width;
             Height = height;
             Score = startScore ?? 0;
-            _elements = new int[Height,Width];
+            _elements = new int[Height, Width];
             _baseValue = baseValue ?? _baseValue;
             _mergeElements = mergeElements;
             MapperElements(element => _baseValue);
@@ -51,6 +51,7 @@ namespace Core_2048
         public Element SetValue(Element element)
         {
             _elements[element.Row, element.Column] = element.Value;
+
             return element;
         }
 
@@ -71,7 +72,9 @@ namespace Core_2048
 
             for (var outerItem = 0; outerItem < outerCount; outerItem++)
             {
-                for (var innerItem = innerStart; IsInnerCondition(innerItem, innerStart, innerEnd); innerItem = reverseDrop(innerItem))
+                for (var innerItem = innerStart;
+                     IsInnerCondition(innerItem, innerStart, innerEnd);
+                     innerItem = reverseDrop(innerItem))
                 {
                     if (getValue(outerItem, innerItem).Value == _baseValue) continue;
 
@@ -84,7 +87,7 @@ namespace Core_2048
                         var newElement = _mergeElements(
                             getValue(outerItem, newInnerItem).Value,
                             getValue(outerItem, innerItem).Value
-                            );
+                        );
                         setValue(outerItem, newInnerItem, newElement);
                         setValue(outerItem, innerItem, _baseValue);
                         HasUpdated = true;
@@ -132,6 +135,7 @@ namespace Core_2048
                     result = false;
                 }
             });
+
             return result;
         }
 
@@ -154,15 +158,16 @@ namespace Core_2048
                 ? StandardNewValue
                 : BetterNewValue;
             var (randomRow, randomColumn) = empties[index];
+
             return new Element(randomRow, randomColumn, value);
         }
 
         public void MapperElements(ChangeElement mapper)
         {
             ForEach(element => SetValue(new Element(
-                element.Row,
-                element.Column,
-                mapper(element)
+                    element.Row,
+                    element.Column,
+                    mapper(element)
                 )
             ));
         }
@@ -183,7 +188,8 @@ namespace Core_2048
             return _elements[element.Row, element.Column] == element.Value;
         }
 
-        private int CalculateNewItem(int innerItem, Drop drop, int innerStart, int innerEnd, GetValue getValue, int outerItem)
+        private int CalculateNewItem(int innerItem, Drop drop, int innerStart, int innerEnd, GetValue getValue,
+            int outerItem)
         {
             var newInnerItem = innerItem;
             do
@@ -195,4 +201,5 @@ namespace Core_2048
             return newInnerItem;
         }
     }
+
 }
