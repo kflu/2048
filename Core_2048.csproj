@@ -32,6 +32,10 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
+        <Reference Include="JetBrains.Annotations, Version=2021.2.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325">
+          <HintPath>packages\JetBrains.Annotations.2021.2.0-eap2\lib\net20\JetBrains.Annotations.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Xml" />
@@ -40,11 +44,17 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Core.cs" />
-        <Compile Include="Element.cs" />
+        <Compile Include="C#\Board.cs" />
+        <Compile Include="C#\BoardHelper.cs" />
+        <Compile Include="C#\Core.cs" />
+        <Compile Include="C#\Element.cs" />
+        <Compile Include="C#\IElementGenerator.cs" />
+        <Compile Include="C#\RandomElementGenerator.cs" />
+        <Compile Include="C#\UpdateLoop.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="UpdateLoop.cs" />
-        <Compile Include="Utils.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Include="packages.config" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

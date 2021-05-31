@@ -9,42 +9,48 @@ namespace ConsoleOut
     {
         public static void Main(string[] args)
         {
-            var app = new Core(4, 4, 0, 0,
-                (value, oldValue) => value * 2
-                );
-            app.SetValue(new Element(2, 2, app.StandardNewValue));
+            var board = new Board(4, 4, 0);
+            var elementGenerator = new RandomElementGenerator<ulong>();
+            elementGenerator.EmptyChecker = element => element == 0;
+            elementGenerator.AddToPool(2, 95);
+            elementGenerator.AddToPool(4, 5);
+            var app = Core.Builder()
+                .SetBoard(board)
+                .SetBaseValue(0)
+                .SetMerge((value, oldValue) => value + oldValue)
+                .SetPredictor((current, target) => current == target)
+                .SetElementGenerator(elementGenerator)
+                .Build();
+            app.AddNew();
+            app.Updated += elements =>
+            {
+                app.AddNew();
+                Render(app);
+            };
             Render(app);
             while (true)
             {
                 var direction = Input();
-                if (direction != null)
+                if (direction == null)
                 {
-                    var isAlongRow = direction is Direction.Left or Direction.Right;
-                    var isIncreasing = direction is Direction.Left or Direction.Up;
-                    app.UpdateElements(isAlongRow, isIncreasing);
+                    continue;
                 }
 
-                if (app.HasUpdated)
-                {
-                    var newRandom = app.NewElement();
-                    if (newRandom != null)
-                    {
-                        app.SetValue(newRandom);
-                    }
-                }
-                Render(app);
+                var isAlongRow = direction is Direction.Left or Direction.Right;
+                var isIncreasing = direction is Direction.Left or Direction.Up;
+                app.Update(isAlongRow, isIncreasing);
             }
         }
 
-        private static void Render(Core app)
+        private static void Render(Core<ulong> app)
         {
             Console.Clear();
             var prevRow = -1;
-            var pattern = new Func<int, string>(value => $"  {value}  |");
-            app.ForEach(element =>
+            var pattern = new Func<ulong, string>(value => $"  {value}  |");
+            app.Board.ForEach((value, row, column) =>
             {
-                var cell = pattern(element.Value);
-                if (prevRow == element.Row)
+                var cell = pattern(value);
+                if (prevRow == row)
                 {
                     Console.Write(cell);
                 }
@@ -52,7 +58,7 @@ namespace ConsoleOut
                 {
                     Console.WriteLine("");
                     Console.Write($"|{cell}");
-                    prevRow = element.Row;
+                    prevRow = row;
                 }
             });
         }
