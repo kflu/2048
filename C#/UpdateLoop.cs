@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Core_2048
 {
+
     public class UpdateLoop<T> : IEnumerable<UpdateLoop<T>.ChangeElementAction>
     {
         public delegate int Drop(int index);
@@ -20,12 +21,12 @@ namespace Core_2048
 
         private Drop _drop;
         private Get _get;
+        private int _innerEnd;
+        private int _innerStart;
         private IsInnerCondition _isInnerCondition;
         private Merge _merge;
 
         private int _outerCount;
-        private int _innerStart;
-        private int _innerEnd;
 
         private Predictor _predictor;
         private Drop _reverseDrop;
@@ -69,6 +70,7 @@ namespace Core_2048
                 .SetColumn(newElement.Column)
                 .SetValue(_merge(newElement.Value, previous.Value))
                 .Build();
+
             return new ChangeElementAction
             {
                 Previous = previous,
@@ -87,6 +89,7 @@ namespace Core_2048
                 .SetColumn(newElement.Column)
                 .SetValue(previous.Value)
                 .Build();
+
             return new ChangeElementAction
             {
                 Previous = previous,
@@ -123,12 +126,12 @@ namespace Core_2048
             private T _baseValue;
             private Drop _drop;
             private Get _get;
+            private int _innerEnd;
+            private int _innerStart;
             private IsInnerCondition _isInnerCondition;
             private Merge _merge;
 
             private int _outerCount;
-            private int _innerStart;
-            private int _innerEnd;
 
             private Predictor _predictor;
             private Drop _reverseDrop;
@@ -181,6 +184,7 @@ namespace Core_2048
                 {
                     var minIndex = Math.Min(innerStart, innerEnd);
                     var maxIndex = Math.Max(innerStart, innerEnd);
+
                     return minIndex <= index && index <= maxIndex;
                 };
                 _innerStart = innerStart;
@@ -217,7 +221,6 @@ namespace Core_2048
         #endregion
     }
 
-    public class UpdateLoop : UpdateLoop<ulong>
-    {
-    }
+    public class UpdateLoop : UpdateLoop<ulong> { }
+
 }

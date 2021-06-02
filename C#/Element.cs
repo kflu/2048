@@ -1,5 +1,6 @@
 ﻿namespace Core_2048
 {
+
     public class Element<T>
     {
         public int Column;
@@ -48,6 +49,7 @@
                     Column = _column,
                     Value = _value
                 };
+
                 return build;
             }
         }
@@ -55,7 +57,6 @@
         #endregion
     }
 
-    public class Element : Element<ulong>
-    {
-    }
+    public class Element : Element<ulong> { }
+
 }
