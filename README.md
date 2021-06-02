@@ -26,7 +26,7 @@ My take mini sdk libs for creating the 2048 game in C#. Suitable for any engine 
 
 Sample console project in ConsoleOut directory.
 
-###Example code:
+### Example code:
 
 ![screenshot](doc/2048_console_app_code.png "Source code for a console app")
 
