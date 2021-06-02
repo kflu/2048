@@ -28,7 +28,7 @@ Sample console project in ConsoleOut directory.
 
 ###Example code:
 
- [screenshot](doc/2048_console_app_code.png "Source code for a console app")
+![screenshot](doc/2048_console_app_code.png "Source code for a console app")
 
 ### Here's how it looks like:
 
