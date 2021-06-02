@@ -55,5 +55,34 @@ namespace Core_2048
             var percentage = _pool.Count != 0 ? _allPercentage / _pool.Count : 1;
             AddToPool(value, percentage);
         }
+
+        #region Builder
+
+        public static GeneratorBuilder Builder()
+        {
+            return new GeneratorBuilder();
+        }
+
+        public class GeneratorBuilder
+        {
+            private Predicate<T> _emptyChecker;
+
+            public GeneratorBuilder SetEmptyChecker(Predicate<T> emptyChecker)
+            {
+                _emptyChecker = emptyChecker;
+
+                return this;
+            }
+
+            public RandomElementGenerator<T> Build()
+            {
+                return new RandomElementGenerator<T>()
+                {
+                    EmptyChecker = _emptyChecker
+                };
+            }
+        }
+
+        #endregion
     }
 }
