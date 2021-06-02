@@ -10,7 +10,7 @@ namespace ConsoleOut
         public static void Main(string[] args)
         {
             var board = new Board(4, 4, 0);
-            var elementGenerator = RandomElementGenerator<ulong>.Builder()
+            var elementGenerator = RandomElementGenerator.Builder()
                 .SetEmptyChecker(element => element == 0)
                 .Build();
             elementGenerator.AddToPool(2, 95);
