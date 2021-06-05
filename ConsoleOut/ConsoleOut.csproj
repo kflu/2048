@@ -3,10 +3,11 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net5.0</TargetFramework>
+        <LangVersion>7.3</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Core_2048.csproj" />
+        <PackageReference Include="Core_2048" Version="1.0.0"/>
     </ItemGroup>
 
 </Project>
