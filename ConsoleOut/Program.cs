@@ -37,8 +37,8 @@ namespace ConsoleOut
                     continue;
                 }
 
-                var isAlongRow = direction is Direction.Left or Direction.Right;
-                var isIncreasing = direction is Direction.Left or Direction.Up;
+                var isAlongRow = direction == Direction.Left || direction == Direction.Right;
+                var isIncreasing = direction == Direction.Left || direction == Direction.Up;
                 app.Update(isAlongRow, isIncreasing);
             }
         }
@@ -68,14 +68,19 @@ namespace ConsoleOut
         {
             var key = Console.ReadKey();
 
-            return key.Key switch
+            switch (key.Key)
             {
-                ConsoleKey.W => Direction.Up,
-                ConsoleKey.S => Direction.Down,
-                ConsoleKey.A => Direction.Left,
-                ConsoleKey.D => Direction.Right,
-                _            => null
-            };
+                case ConsoleKey.W:
+                    return Direction.Up;
+                case ConsoleKey.S:
+                    return Direction.Down;
+                case ConsoleKey.A:
+                    return Direction.Left;
+                case ConsoleKey.D:
+                    return Direction.Right;
+                default:
+                    return null;
+            }
         }
     }
 
