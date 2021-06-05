@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Core_2048
@@ -10,13 +11,13 @@ namespace Core_2048
 
         private readonly T[,] _values;
 
-        public Board(int height, int width, T initValue)
+        public Board(int height, int width, Func<T> valueInitiator)
         {
             Height = height;
             Width = width;
 
             _values = new T[Height, Width];
-            ForEach((value, row, column) => Set(row, column, initValue));
+            ForEach((value, row, column) => Set(row, column, valueInitiator()));
         }
 
         public int Height { get; }
@@ -120,7 +121,7 @@ namespace Core_2048
 
     public class Board : Board<ulong>
     {
-        public Board(int height, int width, ulong initValue) : base(height, width, initValue) { }
+        public Board(int height, int width, ulong initValue) : base(height, width, () => initValue) { }
     }
 
 }
