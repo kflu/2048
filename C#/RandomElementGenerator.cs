@@ -21,7 +21,7 @@ namespace Core_2048
                 return null;
             }
 
-            var index = _random.Next(0, empties.Count());
+            var index = _random.Next(0, empties.Count);
             var randomPosition = empties[index];
 
             var predicatePool = new Dictionary<Predicate<int>, T>();
