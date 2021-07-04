@@ -42,7 +42,7 @@ namespace ConsoleOut
             }
         }
 
-        private static void Render(Core<ulong> app)
+        private static void Render(Core app)
         {
             Console.Clear();
             var prevRow = -1;
