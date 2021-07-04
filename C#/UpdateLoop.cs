@@ -15,9 +15,9 @@ namespace Core_2048
 
             public delegate bool IsInnerCondition(int index);
 
-            public delegate T Merge(T newValue, T oldValue);
+            public delegate bool IsMerge(T current, T target);
 
-            public delegate bool Predictor(T current, T target);
+            public delegate T Merge(T previous, T next);
 
             private T _baseValue;
 
@@ -26,11 +26,11 @@ namespace Core_2048
             private int _innerEnd;
             private int _innerStart;
             private IsInnerCondition _isInnerCondition;
+
+            private IsMerge _isMerge;
             private Merge _merge;
 
             private int _outerCount;
-
-            private Predictor _predictor;
             private Drop _reverseDrop;
 
             public IEnumerator<ChangeElementAction> GetEnumerator()
@@ -45,7 +45,7 @@ namespace Core_2048
                         }
 
                         var newInnerItem = CalculateNewItem(innerItem, outerItem);
-                        var isMerge = _isInnerCondition(newInnerItem) && _predictor(
+                        var isMerge = _isInnerCondition(newInnerItem) && _isMerge(
                             _get(outerItem, newInnerItem).Value,
                             _get(outerItem, innerItem).Value
                         );
@@ -65,13 +65,13 @@ namespace Core_2048
             private ChangeElementAction ExecuteWithMerge(int outerItem, int innerItem, int newInnerItem)
             {
                 var previous = _get(outerItem, innerItem);
-                var newElement = _get(outerItem, newInnerItem);
+                var next = _get(outerItem, newInnerItem);
 
-                var next = new Element
+                next = new Element
                 {
-                    Row = newElement.Row,
-                    Column = newElement.Column,
-                    Value = _merge(newElement.Value, previous.Value)
+                    Row = next.Row,
+                    Column = next.Column,
+                    Value = _merge(previous.Value, next.Value)
                 };
 
                 return new ChangeElementAction
@@ -85,12 +85,12 @@ namespace Core_2048
             {
                 newInnerItem = _reverseDrop(newInnerItem);
                 var previous = _get(outerItem, innerItem);
-                var newElement = _get(outerItem, newInnerItem);
+                var next = _get(outerItem, newInnerItem);
 
-                var next = new Element
+                next = new Element
                 {
-                    Row = newElement.Row,
-                    Column = newElement.Column,
+                    Row = next.Row,
+                    Column = next.Column,
                     Value = previous.Value
                 };
 
@@ -133,11 +133,11 @@ namespace Core_2048
                 private int _innerEnd;
                 private int _innerStart;
                 private IsInnerCondition _isInnerCondition;
+
+                private IsMerge _isMerge;
                 private Merge _merge;
 
                 private int _outerCount;
-
-                private Predictor _predictor;
                 private Drop _reverseDrop;
 
                 public UpdateLoopBuilder SetDrop(Drop drop)
@@ -168,9 +168,9 @@ namespace Core_2048
                     return this;
                 }
 
-                public UpdateLoopBuilder SetPredictor(Predictor predictor)
+                public UpdateLoopBuilder SetIsMerge(IsMerge isMerge)
                 {
-                    _predictor = predictor;
+                    _isMerge = isMerge;
 
                     return this;
                 }
@@ -219,7 +219,7 @@ namespace Core_2048
                         _get = _get ?? throw new ArgumentNullException(nameof(_get)),
                         _isInnerCondition =
                             _isInnerCondition ?? throw new ArgumentNullException(nameof(_isInnerCondition)),
-                        _predictor = _predictor ?? throw new ArgumentNullException(nameof(_predictor)),
+                        _isMerge = _isMerge ?? throw new ArgumentNullException(nameof(_isMerge)),
                         _outerCount = _outerCount,
                         _innerStart = _innerStart,
                         _innerEnd = _innerEnd,

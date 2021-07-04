@@ -17,8 +17,8 @@ namespace ConsoleOut
             var app = new Core(board)
             {
                 BaseValue = 0,
-                Merge = (value, oldValue) => value + oldValue,
-                Predictor = (current, target) => current == target,
+                Merge = (previous, next) => previous + next,
+                IsMerge = (current, target) => current == target,
                 ElementGenerator = elementGenerator
             };
             app.AddNew();

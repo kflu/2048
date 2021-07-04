@@ -15,7 +15,7 @@ namespace Core_2048
         }
 
         public UpdateLoop.Merge Merge { get; set; }
-        public UpdateLoop.Predictor Predictor { get; set; }
+        public UpdateLoop.IsMerge IsMerge { get; set; }
         public T BaseValue { get; set; }
         public IElementGenerator ElementGenerator { get; set; }
 
@@ -64,7 +64,7 @@ namespace Core_2048
                 .SetReverseDrop(DropFactory(!isIncreasing))
                 .SetGetter(GetterFactory(isAlongRow))
                 .SetMerge(Merge)
-                .SetPredictor(Predictor)
+                .SetIsMerge(IsMerge)
                 .SetBaseValue(BaseValue)
                 .SetOuterCount(outerCount)
                 .SetInnerCondition(innerStart, innerEnd)
