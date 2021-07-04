@@ -9,11 +9,33 @@ namespace Core_2048
     {
         public class RandomElementGenerator : IElementGenerator
         {
-            private readonly Dictionary<T, int> _pool = new Dictionary<T, int>();
+            private readonly Predicate<T> _emptyChecker;
+            private readonly Func<T, T> _instantiator;
+            private readonly Dictionary<T, int> _pool;
+            private readonly IRandomizer _random;
 
-            private readonly Random _random = new Random();
             private int _allPercentage;
-            private Predicate<T> _emptyChecker;
+
+            public RandomElementGenerator(Predicate<T> emptyChecker, Func<T, T> instantiator = null,
+                IRandomizer random = null, Dictionary<T, int> pool = null)
+            {
+                _emptyChecker = emptyChecker ?? throw new ArgumentNullException(nameof(emptyChecker));
+                _instantiator = instantiator ?? (value => value);
+                _random = random ?? new BaseRandomizer();
+                if (pool != null)
+                {
+                    foreach (var pair in pool)
+                    {
+                        _allPercentage += pair.Value;
+                    }
+
+                    _pool = pool;
+                }
+                else
+                {
+                    _pool = new Dictionary<T, int>();
+                }
+            }
 
             public Element GetNewElement(Board board)
             {
@@ -23,9 +45,21 @@ namespace Core_2048
                     return null;
                 }
 
-                var index = _random.Next(0, empties.Count);
+                var index = _random.Random(0, empties.Count);
                 var randomPosition = empties[index];
 
+                var resultElement = InstantiateRandomElementFromPool();
+
+                return new Element
+                {
+                    Row = randomPosition.Row,
+                    Column = randomPosition.Column,
+                    Value = resultElement
+                };
+            }
+
+            private T InstantiateRandomElementFromPool()
+            {
                 var predicatePool = new Dictionary<Predicate<int>, T>();
                 _pool.Aggregate(0, (percentage, pair) =>
                 {
@@ -35,19 +69,14 @@ namespace Core_2048
 
                     return max;
                 });
-                var resultPercentage = _random.Next(1, _allPercentage);
-                var resultElements = from pair in predicatePool
-                    let predicate = pair.Key
-                    let element = pair.Value
-                    where predicate.Invoke(resultPercentage)
-                    select element;
-
-                return new Element
+                var resultPercentage = _random.Random(1, _allPercentage);
+                foreach (var pair in predicatePool.Where(pair => pair.Key.Invoke(resultPercentage)))
                 {
-                    Row = randomPosition.Row,
-                    Column = randomPosition.Column,
-                    Value = resultElements.First()
-                };
+                    return _instantiator.Invoke(pair.Value);
+                }
+
+                throw new Exception(
+                    $"Pool {_pool} have not object with percentage range that include the percentage {resultPercentage}");
             }
 
             public void AddToPool(T value, int percentage)
@@ -62,34 +91,15 @@ namespace Core_2048
                 AddToPool(value, percentage);
             }
 
-            #region Builder
-
-            public static GeneratorBuilder Builder()
+            private class BaseRandomizer : IRandomizer
             {
-                return new GeneratorBuilder();
-            }
+                private readonly Random _random = new Random();
 
-            public class GeneratorBuilder
-            {
-                private Predicate<T> _emptyChecker;
-
-                public GeneratorBuilder SetEmptyChecker(Predicate<T> emptyChecker)
+                public int Random(int min, int max)
                 {
-                    _emptyChecker = emptyChecker;
-
-                    return this;
-                }
-
-                public RandomElementGenerator Build()
-                {
-                    return new RandomElementGenerator
-                    {
-                        _emptyChecker = _emptyChecker
-                    };
+                    return _random.Next(min, max);
                 }
             }
-
-            #endregion
         }
     }
 
