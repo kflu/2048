@@ -206,17 +206,23 @@ namespace Core_2048
 
                 public UpdateLoop Build()
                 {
+                    if (_baseValue == null)
+                    {
+                        throw new ArgumentNullException(nameof(_baseValue));
+                    }
+
                     return new UpdateLoop
                     {
-                        _drop = _drop,
-                        _reverseDrop = _reverseDrop,
-                        _merge = _merge,
-                        _get = _get,
+                        _drop = _drop ?? throw new ArgumentNullException(nameof(_drop)),
+                        _reverseDrop = _reverseDrop ?? throw new ArgumentNullException(nameof(_reverseDrop)),
+                        _merge = _merge ?? throw new ArgumentNullException(nameof(_merge)),
+                        _get = _get ?? throw new ArgumentNullException(nameof(_get)),
+                        _isInnerCondition =
+                            _isInnerCondition ?? throw new ArgumentNullException(nameof(_isInnerCondition)),
+                        _predictor = _predictor ?? throw new ArgumentNullException(nameof(_predictor)),
                         _outerCount = _outerCount,
-                        _isInnerCondition = _isInnerCondition,
                         _innerStart = _innerStart,
                         _innerEnd = _innerEnd,
-                        _predictor = _predictor,
                         _baseValue = _baseValue
                     };
                 }
