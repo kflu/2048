@@ -4,41 +4,41 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public class Core<T>
+    public partial class Core<T>
     {
-        public Action<Dictionary<Element<T>, Element<T>>> Updated;
+        private readonly Board _board;
+        public Action<Dictionary<Element, Element>> Updated;
 
-        public Core(Board<T> board)
+        public Core(Board board)
         {
-            Board = board;
+            _board = board;
         }
 
-        public Board<T> Board { get; set; }
-        public UpdateLoop<T>.Merge Merge { get; set; }
-        public UpdateLoop<T>.Predictor Predictor { get; set; }
+        public UpdateLoop.Merge Merge { get; set; }
+        public UpdateLoop.Predictor Predictor { get; set; }
         public T BaseValue { get; set; }
-        public IElementGenerator<T> ElementGenerator { get; set; }
+        public IElementGenerator ElementGenerator { get; set; }
 
         public void AddNew()
         {
-            var element = ElementGenerator.GetNewElement(Board);
+            var element = ElementGenerator.GetNewElement(_board);
             if (element == null)
             {
                 return;
             }
 
-            Board.Set(element);
+            _board.Set(element);
         }
 
         public void Update(bool isAlongRow, bool isIncreasing)
         {
             var changes = CalculateChanges(isAlongRow, isIncreasing);
-            var updateMap = new Dictionary<Element<T>, Element<T>>();
+            var updateMap = new Dictionary<Element, Element>();
             foreach (var changeElementAction in changes)
             {
                 var prev = changeElementAction.Previous;
                 var next = changeElementAction.Next;
-                Board.Set(prev.Row, prev.Column, BaseValue)
+                _board.Set(prev.Row, prev.Column, BaseValue)
                     .Set(next);
                 updateMap.Add(prev, next);
             }
@@ -46,15 +46,20 @@ namespace Core_2048
             Updated?.Invoke(updateMap);
         }
 
-        public IEnumerable<UpdateLoop<T>.ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
+        public void Render(Board.Mapper mapper)
         {
-            var outerCount = isAlongRow ? Board.Height : Board.Width;
-            var innerCount = isIncreasing ? Board.Width : Board.Height;
+            _board.ForEach(mapper);
+        }
+
+        public IEnumerable<UpdateLoop.ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
+        {
+            var outerCount = isAlongRow ? _board.Height : _board.Width;
+            var innerCount = isIncreasing ? _board.Width : _board.Height;
 
             var innerStart = isIncreasing ? 0 : innerCount - 1;
             var innerEnd = isIncreasing ? innerCount - 1 : 0;
 
-            return UpdateLoop<T>.Builder()
+            return UpdateLoop.Builder()
                 .SetDrop(DropFactory(isIncreasing))
                 .SetReverseDrop(DropFactory(!isIncreasing))
                 .SetGetter(GetterFactory(isAlongRow))
@@ -66,96 +71,30 @@ namespace Core_2048
                 .Build();
         }
 
-        public UpdateLoop<T>.Drop DropFactory(bool isIncreasing)
+        public UpdateLoop.Drop DropFactory(bool isIncreasing)
         {
             return isIncreasing
-                ? new UpdateLoop<T>.Drop(innerIndex => innerIndex - 1)
+                ? new UpdateLoop.Drop(innerIndex => innerIndex - 1)
                 : innerIndex => innerIndex + 1;
         }
 
-        public UpdateLoop<T>.Get GetterFactory(bool isAlongRow)
+        public UpdateLoop.Get GetterFactory(bool isAlongRow)
         {
             return isAlongRow
-                ? new UpdateLoop<T>.Get((outerItem, innerItem) => Element<T>.Builder()
-                    .SetRow(outerItem)
-                    .SetColumn(innerItem)
-                    .SetValue(Board.Get(outerItem, innerItem))
-                    .Build())
-                : (outerItem, innerItem) => Element<T>.Builder()
-                    .SetRow(innerItem)
-                    .SetColumn(outerItem)
-                    .SetValue(Board.Get(innerItem, outerItem))
-                    .Build();
-        }
-
-        #region Builder
-
-        public static CoreBuilder Builder()
-        {
-            return new CoreBuilder();
-        }
-
-        public class CoreBuilder
-        {
-            private Board<T> _board;
-            private UpdateLoop<T>.Merge _merge;
-            private UpdateLoop<T>.Predictor _predictor;
-            private T _baseValue;
-            private IElementGenerator<T> _elementGenerator;
-
-            public CoreBuilder SetBoard(Board<T> board)
-            {
-                _board = board;
-
-                return this;
-            }
-
-            public CoreBuilder SetMerge(UpdateLoop<T>.Merge merge)
-            {
-                _merge = merge;
-
-                return this;
-            }
-
-            public CoreBuilder SetPredictor(UpdateLoop<T>.Predictor predictor)
-            {
-                _predictor = predictor;
-
-                return this;
-            }
-
-            public CoreBuilder SetBaseValue(T baseValue)
-            {
-                _baseValue = baseValue;
-
-                return this;
-            }
-
-            public CoreBuilder SetElementGenerator(IElementGenerator<T> elementGenerator)
-            {
-                _elementGenerator = elementGenerator;
-
-                return this;
-            }
-
-            public Core<T> Build()
-            {
-                return new Core<T>(_board)
+                ? new UpdateLoop.Get((outerItem, innerItem) => new Element
+                    {
+                        Row = outerItem,
+                        Column = innerItem,
+                        Value = _board.Get(outerItem, innerItem)
+                    }
+                )
+                : (outerItem, innerItem) => new Element
                 {
-                    Merge = _merge,
-                    Predictor = _predictor,
-                    BaseValue = _baseValue,
-                    ElementGenerator = _elementGenerator
+                    Row = innerItem,
+                    Column = outerItem,
+                    Value = _board.Get(innerItem, outerItem)
                 };
-            }
         }
-
-        #endregion
-    }
-
-    public class Core : Core<ulong>
-    {
-        public Core(Board<ulong> board) : base(board) { }
     }
 
 }

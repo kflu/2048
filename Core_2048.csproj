@@ -42,6 +42,7 @@
         <Compile Include="C#\Core.cs" />
         <Compile Include="C#\Element.cs" />
         <Compile Include="C#\IElementGenerator.cs" />
+        <Compile Include="C#\Implementation\Ulong\Core.cs"/>
         <Compile Include="C#\RandomElementGenerator.cs" />
         <Compile Include="C#\UpdateLoop.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

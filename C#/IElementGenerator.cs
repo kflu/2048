@@ -1,9 +1,12 @@
 ﻿namespace Core_2048
 {
 
-    public interface IElementGenerator<T>
+    public partial class Core<T>
     {
-        Element<T> GetNewElement(Board<T> board);
+        public interface IElementGenerator
+        {
+            Element GetNewElement(Board board);
+        }
     }
 
 }

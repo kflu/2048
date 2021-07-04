@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Core_2048;
+using Core_2048.Implementation;
 
 namespace ConsoleOut
 {
@@ -9,19 +10,19 @@ namespace ConsoleOut
     {
         public static void Main(string[] args)
         {
-            var board = new Board(4, 4, 0);
-            var elementGenerator = RandomElementGenerator.Builder()
+            var board = new Core.Board(4, 4, 0);
+            var elementGenerator = Core<ulong>.RandomElementGenerator.Builder()
                 .SetEmptyChecker(element => element == 0)
                 .Build();
             elementGenerator.AddToPool(2, 95);
             elementGenerator.AddToPool(4, 5);
-            var app = Core.Builder()
-                .SetBoard(board)
-                .SetBaseValue(0)
-                .SetMerge((value, oldValue) => value + oldValue)
-                .SetPredictor((current, target) => current == target)
-                .SetElementGenerator(elementGenerator)
-                .Build();
+            var app = new Core(board)
+            {
+                BaseValue = 0,
+                Merge = (value, oldValue) => value + oldValue,
+                Predictor = (current, target) => current == target,
+                ElementGenerator = elementGenerator
+            };
             app.AddNew();
             app.Updated += elements =>
             {
@@ -48,7 +49,7 @@ namespace ConsoleOut
             Console.Clear();
             var prevRow = -1;
             var pattern = new Func<ulong, string>(value => $"  {value}  |");
-            app.Board.ForEach((value, row, column) =>
+            app.Render((value, row, column) =>
             {
                 var cell = pattern(value);
                 if (prevRow == row)
