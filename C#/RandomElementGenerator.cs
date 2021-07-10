@@ -67,6 +67,11 @@ namespace Core_2048
 
                     return max;
                 });
+                if (_allPercentage <= 1)
+                {
+                    _allPercentage = 1;
+                }
+
                 var resultPercentage = _random.Random(1, _allPercentage);
                 foreach (var pair in predicatePool.Where(pair => pair.Key.Invoke(resultPercentage)))
                 {
