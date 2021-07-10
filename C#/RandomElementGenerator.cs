@@ -9,18 +9,16 @@ namespace Core_2048
     {
         public class RandomElementGenerator : IElementGenerator
         {
-            private readonly Predicate<T> _emptyChecker;
-            private readonly Func<T, T> _instantiator;
             private readonly Dictionary<T, int> _pool;
             private readonly IRandomizer _random;
+            private readonly IValueBehavior _valueBehavior;
 
             private int _allPercentage;
 
-            public RandomElementGenerator(Predicate<T> emptyChecker, Func<T, T> instantiator = null,
-                IRandomizer random = null, Dictionary<T, int> pool = null)
+            public RandomElementGenerator(IValueBehavior valueBehavior, IRandomizer random = null,
+                Dictionary<T, int> pool = null)
             {
-                _emptyChecker = emptyChecker ?? throw new ArgumentNullException(nameof(emptyChecker));
-                _instantiator = instantiator ?? (value => value);
+                _valueBehavior = valueBehavior ?? throw new ArgumentNullException(nameof(valueBehavior));
                 _random = random ?? new BaseRandomizer();
                 if (pool != null)
                 {
@@ -39,7 +37,7 @@ namespace Core_2048
 
             public Element GetNewElement(Board board)
             {
-                var empties = BoardHelper.GetEmpties(board, _emptyChecker).ToList();
+                var empties = BoardHelper.GetEmpties(board, _valueBehavior.IsBase).ToList();
                 if (empties.Count == 0)
                 {
                     return null;
@@ -48,7 +46,7 @@ namespace Core_2048
                 var index = _random.Random(0, empties.Count);
                 var randomPosition = empties[index];
 
-                var resultElement = InstantiateRandomElementFromPool();
+                var resultElement = InstantiateRandomElementFromPool(randomPosition);
 
                 return new Element
                 {
@@ -58,7 +56,7 @@ namespace Core_2048
                 };
             }
 
-            private T InstantiateRandomElementFromPool()
+            private T InstantiateRandomElementFromPool(Element position)
             {
                 var predicatePool = new Dictionary<Predicate<int>, T>();
                 _pool.Aggregate(0, (percentage, pair) =>
@@ -72,7 +70,7 @@ namespace Core_2048
                 var resultPercentage = _random.Random(1, _allPercentage);
                 foreach (var pair in predicatePool.Where(pair => pair.Key.Invoke(resultPercentage)))
                 {
-                    return _instantiator.Invoke(pair.Value);
+                    return _valueBehavior.Instantiate(pair.Value, position.Row, position.Column);
                 }
 
                 throw new Exception(

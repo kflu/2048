@@ -21,6 +21,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <DocumentationFile>bin\Debug\Core_2048.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,6 +31,7 @@
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <DocumentationFile>bin\Release\Core_2048.xml</DocumentationFile>
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />
@@ -39,11 +41,13 @@
     <ItemGroup>
         <Compile Include="C#\Board.cs"/>
         <Compile Include="C#\BoardHelper.cs"/>
+        <Compile Include="C#\ChangeElementAction.cs"/>
         <Compile Include="C#\Core.cs"/>
+        <Compile Include="C#\UpdateBehavior.cs"/>
         <Compile Include="C#\Element.cs"/>
         <Compile Include="C#\IElementGenerator.cs"/>
-        <Compile Include="C#\Implementation\Ulong\Core.cs"/>
         <Compile Include="C#\IRandomizer.cs"/>
+        <Compile Include="C#\IValueBehavior.cs"/>
         <Compile Include="C#\RandomElementGenerator.cs"/>
         <Compile Include="C#\UpdateLoop.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>

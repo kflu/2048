@@ -7,47 +7,34 @@ namespace Core_2048
 
     public partial class Core<T>
     {
-        public class UpdateLoop : IEnumerable<UpdateLoop.ChangeElementAction>
+        internal class UpdateLoop : IEnumerable<ChangeElementAction>
         {
-            public delegate int Drop(int index);
+            private readonly UpdateBehavior _updateBehavior;
+            private readonly IValueBehavior _valueBehavior;
 
-            public delegate Element Get(int outerItem, int innerItem);
-
-            public delegate bool IsInnerCondition(int index);
-
-            public delegate bool IsMerge(T current, T target);
-
-            public delegate T Merge(T previous, T next);
-
-            private T _baseValue;
-
-            private Drop _drop;
-            private Get _get;
-            private int _innerEnd;
-            private int _innerStart;
-            private IsInnerCondition _isInnerCondition;
-
-            private IsMerge _isMerge;
-            private Merge _merge;
-
-            private int _outerCount;
-            private Drop _reverseDrop;
+            public UpdateLoop(UpdateBehavior updateBehavior, IValueBehavior valueBehavior)
+            {
+                _updateBehavior = updateBehavior ?? throw new ArgumentNullException(nameof(updateBehavior));
+                _valueBehavior = valueBehavior ?? throw new ArgumentNullException(nameof(valueBehavior));
+            }
 
             public IEnumerator<ChangeElementAction> GetEnumerator()
             {
-                for (var outerItem = 0; outerItem < _outerCount; outerItem++)
+                for (var outerItem = 0; outerItem < _updateBehavior.OuterCount; outerItem++)
                 {
-                    for (var innerItem = _innerStart; _isInnerCondition(innerItem); innerItem = _reverseDrop(innerItem))
+                    for (var innerItem = _updateBehavior.InnerStart;
+                         _updateBehavior.IsInnerCondition(innerItem);
+                         innerItem = _updateBehavior.ReverseDrop(innerItem))
                     {
-                        if (Equals(_get(outerItem, innerItem).Value, _baseValue))
+                        if (_valueBehavior.IsBase(_updateBehavior.Get(outerItem, innerItem).Value))
                         {
                             continue;
                         }
 
                         var newInnerItem = CalculateNewItem(innerItem, outerItem);
-                        var isMerge = _isInnerCondition(newInnerItem) && _isMerge(
-                            _get(outerItem, newInnerItem).Value,
-                            _get(outerItem, innerItem).Value
+                        var isMerge = _updateBehavior.IsInnerCondition(newInnerItem) && _valueBehavior.IsMerge(
+                            _updateBehavior.Get(outerItem, newInnerItem).Value,
+                            _updateBehavior.Get(outerItem, innerItem).Value
                         );
 
                         yield return isMerge
@@ -64,14 +51,14 @@ namespace Core_2048
 
             private ChangeElementAction ExecuteWithMerge(int outerItem, int innerItem, int newInnerItem)
             {
-                var previous = _get(outerItem, innerItem);
-                var next = _get(outerItem, newInnerItem);
+                var previous = _updateBehavior.Get(outerItem, innerItem);
+                var next = _updateBehavior.Get(outerItem, newInnerItem);
 
                 next = new Element
                 {
                     Row = next.Row,
                     Column = next.Column,
-                    Value = _merge(previous.Value, next.Value)
+                    Value = _valueBehavior.Merge(previous.Value, next.Value)
                 };
 
                 return new ChangeElementAction
@@ -83,9 +70,9 @@ namespace Core_2048
 
             private ChangeElementAction ExecuteWithoutMerge(int outerItem, int innerItem, int newInnerItem)
             {
-                newInnerItem = _reverseDrop(newInnerItem);
-                var previous = _get(outerItem, innerItem);
-                var next = _get(outerItem, newInnerItem);
+                newInnerItem = _updateBehavior.ReverseDrop(newInnerItem);
+                var previous = _updateBehavior.Get(outerItem, innerItem);
+                var next = _updateBehavior.Get(outerItem, newInnerItem);
 
                 next = new Element
                 {
@@ -106,129 +93,12 @@ namespace Core_2048
                 var newInnerItem = innerItem;
                 do
                 {
-                    newInnerItem = _drop(newInnerItem);
-                } while (_isInnerCondition(newInnerItem) && Equals(_get(outerItem, newInnerItem).Value, _baseValue));
+                    newInnerItem = _updateBehavior.Drop(newInnerItem);
+                } while (_updateBehavior.IsInnerCondition(newInnerItem) &&
+                         _valueBehavior.IsBase(_updateBehavior.Get(outerItem, newInnerItem).Value));
 
                 return newInnerItem;
             }
-
-            public class ChangeElementAction
-            {
-                public Element Next;
-                public Element Previous;
-            }
-
-            #region Builder
-
-            public static UpdateLoopBuilder Builder()
-            {
-                return new UpdateLoopBuilder();
-            }
-
-            public class UpdateLoopBuilder
-            {
-                private T _baseValue;
-                private Drop _drop;
-                private Get _get;
-                private int _innerEnd;
-                private int _innerStart;
-                private IsInnerCondition _isInnerCondition;
-
-                private IsMerge _isMerge;
-                private Merge _merge;
-
-                private int _outerCount;
-                private Drop _reverseDrop;
-
-                public UpdateLoopBuilder SetDrop(Drop drop)
-                {
-                    _drop = drop;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetReverseDrop(Drop reverseDrop)
-                {
-                    _reverseDrop = reverseDrop;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetMerge(Merge merge)
-                {
-                    _merge = merge;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetGetter(Get get)
-                {
-                    _get = get;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetIsMerge(IsMerge isMerge)
-                {
-                    _isMerge = isMerge;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetOuterCount(int outerCount)
-                {
-                    _outerCount = outerCount;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetInnerCondition(int innerStart, int innerEnd)
-                {
-                    _isInnerCondition = index =>
-                    {
-                        var minIndex = Math.Min(innerStart, innerEnd);
-                        var maxIndex = Math.Max(innerStart, innerEnd);
-
-                        return minIndex <= index && index <= maxIndex;
-                    };
-                    _innerStart = innerStart;
-                    _innerEnd = innerEnd;
-
-                    return this;
-                }
-
-                public UpdateLoopBuilder SetBaseValue(T baseValue)
-                {
-                    _baseValue = baseValue;
-
-                    return this;
-                }
-
-                public UpdateLoop Build()
-                {
-                    if (_baseValue == null)
-                    {
-                        throw new ArgumentNullException(nameof(_baseValue));
-                    }
-
-                    return new UpdateLoop
-                    {
-                        _drop = _drop ?? throw new ArgumentNullException(nameof(_drop)),
-                        _reverseDrop = _reverseDrop ?? throw new ArgumentNullException(nameof(_reverseDrop)),
-                        _merge = _merge ?? throw new ArgumentNullException(nameof(_merge)),
-                        _get = _get ?? throw new ArgumentNullException(nameof(_get)),
-                        _isInnerCondition =
-                            _isInnerCondition ?? throw new ArgumentNullException(nameof(_isInnerCondition)),
-                        _isMerge = _isMerge ?? throw new ArgumentNullException(nameof(_isMerge)),
-                        _outerCount = _outerCount,
-                        _innerStart = _innerStart,
-                        _innerEnd = _innerEnd,
-                        _baseValue = _baseValue
-                    };
-                }
-            }
-
-            #endregion
         }
     }
 

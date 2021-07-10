@@ -36,6 +36,7 @@ namespace Core_2048
             ///     Amount elements for outer array dimensions: T[Height, Width]
             /// </summary>
             public int Height { get; }
+
             /// <summary>
             ///     Amount elements for inner array dimensions: T[Height, Width]
             /// </summary>
