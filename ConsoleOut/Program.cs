@@ -15,7 +15,7 @@ namespace ConsoleOut
                 .Build();
             elementGenerator.AddToPool(2, 95);
             elementGenerator.AddToPool(4, 5);
-            var app = Core<ulong>.Builder()
+            var app = BoardBehavior<ulong>.Builder()
                 .SetBoard(board)
                 .SetBaseValue(0)
                 .SetMerge((value, oldValue) => value + oldValue)
@@ -43,7 +43,7 @@ namespace ConsoleOut
             }
         }
 
-        private static void Render(Core<ulong> app)
+        private static void Render(BoardBehavior<ulong> app)
         {
             Console.Clear();
             var prevRow = -1;

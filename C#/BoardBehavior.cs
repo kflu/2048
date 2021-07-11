@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public class Core<T>
+    public class BoardBehavior<T>
     {
         public Action<Dictionary<Element<T>, Element<T>>> Updated;
 
-        public Core(Board<T> board)
+        public BoardBehavior(Board<T> board)
         {
             Board = board;
         }
@@ -138,9 +138,9 @@ namespace Core_2048
                 return this;
             }
 
-            public Core<T> Build()
+            public BoardBehavior<T> Build()
             {
-                return new Core<T>(_board)
+                return new BoardBehavior<T>(_board)
                 {
                     Merge = _merge,
                     Predictor = _predictor,
