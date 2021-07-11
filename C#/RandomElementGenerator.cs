@@ -13,7 +13,7 @@ namespace Core_2048
         private int _allPercentage;
         private Predicate<T> _emptyChecker;
 
-        public Element<T> GetNewElement(Board<T> board)
+        public Cell<T> GetNewElement(Board<T> board)
         {
             var empties = BoardHelper<T>.GetEmpties(board, _emptyChecker).ToList();
             if (empties.Count == 0)
@@ -40,7 +40,7 @@ namespace Core_2048
                 where predicate.Invoke(resultPercentage)
                 select element;
 
-            return new Element<T>
+            return new Cell<T>
             {
                 Row = randomPosition.Row,
                 Column = randomPosition.Column,

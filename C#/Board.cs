@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public class Board<T> : IEnumerable<Element<T>>
+    public class Board<T> : IEnumerable<Cell<T>>
     {
         public delegate void Mapper(T value, int row, int column);
 
@@ -23,13 +23,13 @@ namespace Core_2048
         public int Height { get; }
         public int Width { get; }
 
-        public IEnumerator<Element<T>> GetEnumerator()
+        public IEnumerator<Cell<T>> GetEnumerator()
         {
             for (var row = 0; row < _values.GetLength(0); row++)
             {
                 for (var column = 0; column < _values.GetLength(1); column++)
                 {
-                    yield return new Element<T>()
+                    yield return new Cell<T>()
                     {
                         Row = row,
                         Column = column,
@@ -56,9 +56,9 @@ namespace Core_2048
             return this;
         }
 
-        public Board<T> Set(Element<T> element)
+        public Board<T> Set(Cell<T> cell)
         {
-            Set(element.Row, element.Column, element.Value);
+            Set(cell.Row, cell.Column, cell.Value);
 
             return this;
         }

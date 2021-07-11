@@ -9,7 +9,7 @@ namespace Core_2048
     {
         public delegate int Drop(int index);
 
-        public delegate Element<T> Get(int outerItem, int innerItem);
+        public delegate Cell<T> Get(int outerItem, int innerItem);
 
         public delegate bool IsInnerCondition(int index);
 
@@ -65,7 +65,7 @@ namespace Core_2048
             var previous = _get(outerItem, innerItem);
             var newElement = _get(outerItem, newInnerItem);
 
-            var next = new Element<T>
+            var next = new Cell<T>
             {
                 Row = newElement.Row,
                 Column = newElement.Column,
@@ -85,7 +85,7 @@ namespace Core_2048
             var previous = _get(outerItem, innerItem);
             var newElement = _get(outerItem, newInnerItem);
 
-            var next = new Element<T>()
+            var next = new Cell<T>()
             {
                 Row = newElement.Row,
                 Column = newElement.Column,
@@ -112,8 +112,8 @@ namespace Core_2048
 
         public class ChangeElementAction
         {
-            public Element<T> Next;
-            public Element<T> Previous;
+            public Cell<T> Next;
+            public Cell<T> Previous;
         }
 
         #region Builder

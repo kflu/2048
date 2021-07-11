@@ -6,7 +6,7 @@ namespace Core_2048
 
     public class BoardBehavior<T>
     {
-        public Action<Dictionary<Element<T>, Element<T>>> Updated;
+        public Action<Dictionary<Cell<T>, Cell<T>>> Updated;
 
         public BoardBehavior(Board<T> board)
         {
@@ -33,7 +33,7 @@ namespace Core_2048
         public void Update(bool isAlongRow, bool isIncreasing)
         {
             var changes = CalculateChanges(isAlongRow, isIncreasing);
-            var updateMap = new Dictionary<Element<T>, Element<T>>();
+            var updateMap = new Dictionary<Cell<T>, Cell<T>>();
             foreach (var changeElementAction in changes)
             {
                 var prev = changeElementAction.Previous;
@@ -76,13 +76,13 @@ namespace Core_2048
         public UpdateLoop<T>.Get GetterFactory(bool isAlongRow)
         {
             return isAlongRow
-                ? new UpdateLoop<T>.Get((outerItem, innerItem) => new Element<T>
+                ? new UpdateLoop<T>.Get((outerItem, innerItem) => new Cell<T>
                 {
                     Row = outerItem,
                     Column = innerItem,
                     Value = Board.Get(outerItem, innerItem)
                 })
-                : (outerItem, innerItem) => new Element<T>
+                : (outerItem, innerItem) => new Cell<T>
                 {
                     Row = innerItem,
                     Column = outerItem,

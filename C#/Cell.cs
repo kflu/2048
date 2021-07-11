@@ -1,7 +1,7 @@
 ﻿namespace Core_2048
 {
 
-    public class Element<T>
+    public class Cell<T>
     {
         public int Column;
         public int Row;

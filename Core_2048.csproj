@@ -40,7 +40,7 @@
         <Compile Include="C#\Board.cs" />
         <Compile Include="C#\BoardHelper.cs" />
         <Compile Include="C#\BoardBehavior.cs" />
-        <Compile Include="C#\Element.cs" />
+        <Compile Include="C#\Cell.cs" />
         <Compile Include="C#\IElementGenerator.cs" />
         <Compile Include="C#\RandomElementGenerator.cs" />
         <Compile Include="C#\UpdateLoop.cs" />
