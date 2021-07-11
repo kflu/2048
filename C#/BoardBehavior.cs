@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public class BoardBehavior<T>
+    public partial class BoardBehavior<T>
     {
         private readonly Board<T> _board;
         private readonly ICellBehavior<T> _cellBehavior;
@@ -12,7 +12,8 @@ namespace Core_2048
 
         private Action<Dictionary<Cell<T>, Cell<T>>> _updated;
 
-        public BoardBehavior(Board<T> board, ICellGenerator<T> cellGenerator, ICellBehavior<T> cellBehavior, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
+        public BoardBehavior(Board<T> board, ICellGenerator<T> cellGenerator, ICellBehavior<T> cellBehavior,
+            Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
         {
             _updated = updated;
             _board = board;
@@ -57,7 +58,7 @@ namespace Core_2048
             _updated?.Invoke(updateMap);
         }
 
-        public IEnumerable<UpdateLoop<T>.ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
+        public IEnumerable<ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
         {
             var outerCount = isAlongRow ? _board.Height : _board.Width;
             var innerCount = isIncreasing ? _board.Width : _board.Height;
@@ -65,7 +66,7 @@ namespace Core_2048
             var innerStart = isIncreasing ? 0 : innerCount - 1;
             var innerEnd = isIncreasing ? innerCount - 1 : 0;
 
-            return new UpdateLoop<T>(
+            return new UpdateLoop(
                 _cellBehavior,
                 DropFactory(isIncreasing),
                 GetterFactory(isAlongRow),
@@ -83,17 +84,17 @@ namespace Core_2048
             );
         }
 
-        public UpdateLoop<T>.Drop DropFactory(bool isIncreasing)
+        private UpdateLoop.Drop DropFactory(bool isIncreasing)
         {
             return isIncreasing
-                ? new UpdateLoop<T>.Drop(innerIndex => innerIndex - 1)
+                ? new UpdateLoop.Drop(innerIndex => innerIndex - 1)
                 : innerIndex => innerIndex + 1;
         }
 
-        public UpdateLoop<T>.Get GetterFactory(bool isAlongRow)
+        private UpdateLoop.Get GetterFactory(bool isAlongRow)
         {
             return isAlongRow
-                ? new UpdateLoop<T>.Get((outerItem, innerItem) => new Cell<T>
+                ? new UpdateLoop.Get((outerItem, innerItem) => new Cell<T>
                 {
                     Row = outerItem,
                     Column = innerItem,
@@ -105,6 +106,12 @@ namespace Core_2048
                     Column = outerItem,
                     Value = _board.Get(innerItem, outerItem)
                 };
+        }
+
+        public class ChangeElementAction
+        {
+            public Cell<T> Next;
+            public Cell<T> Previous;
         }
     }
 
