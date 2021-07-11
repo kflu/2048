@@ -29,11 +29,12 @@ namespace Core_2048
             {
                 for (var column = 0; column < _values.GetLength(1); column++)
                 {
-                    yield return Element<T>.Builder()
-                        .SetRow(row)
-                        .SetColumn(column)
-                        .SetValue(_values[row, column])
-                        .Build();
+                    yield return new Element<T>()
+                    {
+                        Row = row,
+                        Column = column,
+                        Value = _values[row, column]
+                    };
                 }
             }
         }

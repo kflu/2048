@@ -40,11 +40,12 @@ namespace Core_2048
                 where predicate.Invoke(resultPercentage)
                 select element;
 
-            return Element<T>.Builder()
-                .SetRow(randomPosition.Row)
-                .SetColumn(randomPosition.Column)
-                .SetValue(resultElements.First())
-                .Build();
+            return new Element<T>
+            {
+                Row = randomPosition.Row,
+                Column = randomPosition.Column,
+                Value = resultElements.First()
+            };
         }
 
         public void AddToPool(T value, int percentage)

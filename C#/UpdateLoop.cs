@@ -65,11 +65,12 @@ namespace Core_2048
             var previous = _get(outerItem, innerItem);
             var newElement = _get(outerItem, newInnerItem);
 
-            var next = Element<T>.Builder()
-                .SetRow(newElement.Row)
-                .SetColumn(newElement.Column)
-                .SetValue(_merge(newElement.Value, previous.Value))
-                .Build();
+            var next = new Element<T>
+            {
+                Row = newElement.Row,
+                Column = newElement.Column,
+                Value = _merge(newElement.Value, previous.Value)
+            };
 
             return new ChangeElementAction
             {
@@ -84,11 +85,12 @@ namespace Core_2048
             var previous = _get(outerItem, innerItem);
             var newElement = _get(outerItem, newInnerItem);
 
-            var next = Element<T>.Builder()
-                .SetRow(newElement.Row)
-                .SetColumn(newElement.Column)
-                .SetValue(previous.Value)
-                .Build();
+            var next = new Element<T>()
+            {
+                Row = newElement.Row,
+                Column = newElement.Column,
+                Value = previous.Value
+            };
 
             return new ChangeElementAction
             {

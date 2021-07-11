@@ -76,16 +76,18 @@ namespace Core_2048
         public UpdateLoop<T>.Get GetterFactory(bool isAlongRow)
         {
             return isAlongRow
-                ? new UpdateLoop<T>.Get((outerItem, innerItem) => Element<T>.Builder()
-                    .SetRow(outerItem)
-                    .SetColumn(innerItem)
-                    .SetValue(Board.Get(outerItem, innerItem))
-                    .Build())
-                : (outerItem, innerItem) => Element<T>.Builder()
-                    .SetRow(innerItem)
-                    .SetColumn(outerItem)
-                    .SetValue(Board.Get(innerItem, outerItem))
-                    .Build();
+                ? new UpdateLoop<T>.Get((outerItem, innerItem) => new Element<T>
+                {
+                    Row = outerItem,
+                    Column = innerItem,
+                    Value = Board.Get(outerItem, innerItem)
+                })
+                : (outerItem, innerItem) => new Element<T>
+                {
+                    Row = innerItem,
+                    Column = outerItem,
+                    Value = Board.Get(innerItem, outerItem)
+                };
         }
 
         #region Builder
