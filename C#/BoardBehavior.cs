@@ -60,52 +60,7 @@ namespace Core_2048
 
         public IEnumerable<ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
         {
-            var outerCount = isAlongRow ? _board.Height : _board.Width;
-            var innerCount = isIncreasing ? _board.Width : _board.Height;
-
-            var innerStart = isIncreasing ? 0 : innerCount - 1;
-            var innerEnd = isIncreasing ? innerCount - 1 : 0;
-
-            return new UpdateLoop(
-                _cellBehavior,
-                DropFactory(isIncreasing),
-                GetterFactory(isAlongRow),
-                innerEnd,
-                innerStart,
-                index =>
-                {
-                    var minIndex = Math.Min(innerStart, innerEnd);
-                    var maxIndex = Math.Max(innerStart, innerEnd);
-
-                    return minIndex <= index && index <= maxIndex;
-                },
-                outerCount,
-                DropFactory(!isIncreasing)
-            );
-        }
-
-        private UpdateLoop.Drop DropFactory(bool isIncreasing)
-        {
-            return isIncreasing
-                ? new UpdateLoop.Drop(innerIndex => innerIndex - 1)
-                : innerIndex => innerIndex + 1;
-        }
-
-        private UpdateLoop.Get GetterFactory(bool isAlongRow)
-        {
-            return isAlongRow
-                ? new UpdateLoop.Get((outerItem, innerItem) => new Cell<T>
-                {
-                    Row = outerItem,
-                    Column = innerItem,
-                    Value = _board.Get(outerItem, innerItem)
-                })
-                : (outerItem, innerItem) => new Cell<T>
-                {
-                    Row = innerItem,
-                    Column = outerItem,
-                    Value = _board.Get(innerItem, outerItem)
-                };
+            return new UpdateLoop(_cellBehavior, _board, isAlongRow, isIncreasing);
         }
 
         public class ChangeElementAction
