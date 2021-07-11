@@ -89,6 +89,4 @@ namespace Core_2048
         #endregion
     }
 
-    public class RandomElementGenerator : RandomElementGenerator<ulong> { }
-
 }

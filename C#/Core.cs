@@ -153,9 +153,4 @@ namespace Core_2048
         #endregion
     }
 
-    public class Core : Core<ulong>
-    {
-        public Core(Board<ulong> board) : base(board) { }
-    }
-
 }

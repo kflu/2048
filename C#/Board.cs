@@ -119,9 +119,4 @@ namespace Core_2048
         }
     }
 
-    public class Board : Board<ulong>
-    {
-        public Board(int height, int width, ulong initValue) : base(height, width, () => initValue) { }
-    }
-
 }

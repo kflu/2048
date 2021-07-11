@@ -57,6 +57,4 @@
         #endregion
     }
 
-    public class Element : Element<ulong> { }
-
 }
