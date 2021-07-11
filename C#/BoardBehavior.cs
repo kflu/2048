@@ -6,32 +6,39 @@ namespace Core_2048
 
     public class BoardBehavior<T>
     {
-        public Action<Dictionary<Cell<T>, Cell<T>>> Updated;
+        private readonly Board<T> _board;
+        private readonly ICellBehavior<T> _cellBehavior;
+        private readonly ICellGenerator<T> _cellGenerator;
 
-        private ICellBehavior<T> _cellBehavior;
+        private Action<Dictionary<Cell<T>, Cell<T>>> _updated;
 
-        public BoardBehavior(Board<T> board,
-            ICellGenerator<T> cellGenerator,
-            ICellBehavior<T> cellBehavior, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
+        public BoardBehavior(Board<T> board, ICellGenerator<T> cellGenerator, ICellBehavior<T> cellBehavior, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
         {
-            Updated = updated;
-            Board = board;
-            CellGenerator = cellGenerator;
+            _updated = updated;
+            _board = board;
+            _cellGenerator = cellGenerator;
             _cellBehavior = cellBehavior;
         }
 
-        public Board<T> Board { get; set; }
-        public ICellGenerator<T> CellGenerator { get; set; }
+        public void AddUpdatedListener(Action<Dictionary<Cell<T>, Cell<T>>> action)
+        {
+            _updated += action;
+        }
+
+        public void RemoveUpdatedListener(Action<Dictionary<Cell<T>, Cell<T>>> action)
+        {
+            _updated -= action;
+        }
 
         public void AddNew()
         {
-            var element = CellGenerator.GetNewElement(Board);
+            var element = _cellGenerator.GetNewElement(_board);
             if (element == null)
             {
                 return;
             }
 
-            Board.Set(element);
+            _board.Set(element);
         }
 
         public void Update(bool isAlongRow, bool isIncreasing)
@@ -42,18 +49,18 @@ namespace Core_2048
             {
                 var prev = changeElementAction.Previous;
                 var next = changeElementAction.Next;
-                Board.Set(prev.Row, prev.Column, _cellBehavior.GetCellBaseValue())
+                _board.Set(prev.Row, prev.Column, _cellBehavior.GetCellBaseValue())
                     .Set(next);
                 updateMap.Add(prev, next);
             }
 
-            Updated?.Invoke(updateMap);
+            _updated?.Invoke(updateMap);
         }
 
         public IEnumerable<UpdateLoop<T>.ChangeElementAction> CalculateChanges(bool isAlongRow, bool isIncreasing)
         {
-            var outerCount = isAlongRow ? Board.Height : Board.Width;
-            var innerCount = isIncreasing ? Board.Width : Board.Height;
+            var outerCount = isAlongRow ? _board.Height : _board.Width;
+            var innerCount = isIncreasing ? _board.Width : _board.Height;
 
             var innerStart = isIncreasing ? 0 : innerCount - 1;
             var innerEnd = isIncreasing ? innerCount - 1 : 0;
@@ -90,13 +97,13 @@ namespace Core_2048
                 {
                     Row = outerItem,
                     Column = innerItem,
-                    Value = Board.Get(outerItem, innerItem)
+                    Value = _board.Get(outerItem, innerItem)
                 })
                 : (outerItem, innerItem) => new Cell<T>
                 {
                     Row = innerItem,
                     Column = outerItem,
-                    Value = Board.Get(innerItem, outerItem)
+                    Value = _board.Get(innerItem, outerItem)
                 };
         }
     }

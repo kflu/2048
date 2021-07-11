@@ -17,12 +17,12 @@ namespace ConsoleOut
             elementGenerator.AddToPool(4, 5);
             var app = new BoardBehavior<ulong>(board, elementGenerator, new BaseCellBehavior());
             app.AddNew();
-            app.Updated += elements =>
+            app.AddUpdatedListener(elements =>
             {
                 app.AddNew();
-                Render(app);
-            };
-            Render(app);
+                Render(board);
+            });
+            Render(board);
             while (true)
             {
                 var direction = Input();
@@ -37,12 +37,12 @@ namespace ConsoleOut
             }
         }
 
-        private static void Render(BoardBehavior<ulong> app)
+        private static void Render(Board<ulong> board)
         {
             Console.Clear();
             var prevRow = -1;
             var pattern = new Func<ulong, string>(value => $"  {value}  |");
-            app.Board.ForEach((value, row, column) =>
+            board.ForEach((value, row, column) =>
             {
                 var cell = pattern(value);
                 if (prevRow == row)
