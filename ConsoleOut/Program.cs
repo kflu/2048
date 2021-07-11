@@ -15,13 +15,7 @@ namespace ConsoleOut
                 .Build();
             elementGenerator.AddToPool(2, 95);
             elementGenerator.AddToPool(4, 5);
-            var app = new BoardBehavior<ulong>(
-                board,
-                (value, oldValue) => value + oldValue,
-                (current, target) => current == target,
-                0,
-                elementGenerator
-            );
+            var app = new BoardBehavior<ulong>(board, elementGenerator, new BaseCellBehavior());
             app.AddNew();
             app.Updated += elements =>
             {
@@ -81,6 +75,36 @@ namespace ConsoleOut
                 default:
                     return null;
             }
+        }
+    }
+
+    internal class BaseCellBehavior : ICellBehavior<ulong>
+    {
+        private readonly ulong _baseValue;
+
+        public BaseCellBehavior(ulong baseValue = 0)
+        {
+            _baseValue = baseValue;
+        }
+
+        public bool IsBaseCell(Cell<ulong> cell)
+        {
+            return cell.Value == _baseValue;
+        }
+
+        public bool IsMergeCells(Cell<ulong> previous, Cell<ulong> next)
+        {
+            return previous.Value == next.Value;
+        }
+
+        public ulong MergeCells(Cell<ulong> previous, Cell<ulong> next)
+        {
+            return previous.Value + next.Value;
+        }
+
+        public ulong GetCellBaseValue()
+        {
+            return _baseValue;
         }
     }
 

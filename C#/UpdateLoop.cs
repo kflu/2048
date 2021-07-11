@@ -13,41 +13,29 @@ namespace Core_2048
 
         public delegate bool IsInnerCondition(int index);
 
-        public delegate T Merge(T newValue, T oldValue);
-
-        public delegate bool Predictor(T current, T target);
-
-        private T _baseValue;
+        private ICellBehavior<T> _cellBehavior;
 
         private Drop _drop;
         private Get _get;
         private int _innerEnd;
         private int _innerStart;
         private IsInnerCondition _isInnerCondition;
-        private Merge _merge;
 
         private int _outerCount;
 
-        private Predictor _predictor;
         private Drop _reverseDrop;
 
-        public UpdateLoop(T baseValue, Drop drop, Get get, int innerEnd, int innerStart,
-            IsInnerCondition isInnerCondition, Merge merge, int outerCount, Predictor predictor, Drop reverseDrop)
+        public UpdateLoop(ICellBehavior<T> cellBehavior, Drop drop, Get get, int innerEnd, int innerStart,
+            IsInnerCondition isInnerCondition,
+            int outerCount, Drop reverseDrop)
         {
-            if (baseValue == null)
-            {
-                throw new ArgumentNullException(nameof(baseValue));
-            }
-
-            _baseValue = baseValue;
+            _cellBehavior = cellBehavior ?? throw new ArgumentNullException(nameof(cellBehavior));
             _drop = drop ?? throw new ArgumentNullException(nameof(drop));
             _get = get ?? throw new ArgumentNullException(nameof(get));
             _innerEnd = innerEnd;
             _innerStart = innerStart;
             _isInnerCondition = isInnerCondition ?? throw new ArgumentNullException(nameof(isInnerCondition));
-            _merge = merge ?? throw new ArgumentNullException(nameof(merge));
             _outerCount = outerCount;
-            _predictor = predictor ?? throw new ArgumentNullException(nameof(predictor));
             _reverseDrop = reverseDrop ?? throw new ArgumentNullException(nameof(reverseDrop));
         }
 
@@ -57,15 +45,15 @@ namespace Core_2048
             {
                 for (var innerItem = _innerStart; _isInnerCondition(innerItem); innerItem = _reverseDrop(innerItem))
                 {
-                    if (Equals(_get(outerItem, innerItem).Value, _baseValue))
+                    if (_cellBehavior.IsBaseCell(_get(outerItem, innerItem)))
                     {
                         continue;
                     }
 
                     var newInnerItem = CalculateNewItem(innerItem, outerItem);
-                    var isMerge = _isInnerCondition(newInnerItem) && _predictor(
-                        _get(outerItem, newInnerItem).Value,
-                        _get(outerItem, innerItem).Value
+                    var isMerge = _isInnerCondition(newInnerItem) && _cellBehavior.IsMergeCells(
+                        _get(outerItem, newInnerItem),
+                        _get(outerItem, innerItem)
                     );
 
                     yield return isMerge
@@ -89,7 +77,7 @@ namespace Core_2048
             {
                 Row = newElement.Row,
                 Column = newElement.Column,
-                Value = _merge(newElement.Value, previous.Value)
+                Value = _cellBehavior.MergeCells(previous, newElement)
             };
 
             return new ChangeElementAction
@@ -125,7 +113,7 @@ namespace Core_2048
             do
             {
                 newInnerItem = _drop(newInnerItem);
-            } while (_isInnerCondition(newInnerItem) && Equals(_get(outerItem, newInnerItem).Value, _baseValue));
+            } while (_isInnerCondition(newInnerItem) && _cellBehavior.IsBaseCell(_get(outerItem, newInnerItem)));
 
             return newInnerItem;
         }

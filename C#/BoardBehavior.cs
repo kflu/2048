@@ -8,21 +8,19 @@ namespace Core_2048
     {
         public Action<Dictionary<Cell<T>, Cell<T>>> Updated;
 
-        public BoardBehavior(Board<T> board, UpdateLoop<T>.Merge merge, UpdateLoop<T>.Predictor predictor, T baseValue,
-            ICellGenerator<T> cellGenerator, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
+        private ICellBehavior<T> _cellBehavior;
+
+        public BoardBehavior(Board<T> board,
+            ICellGenerator<T> cellGenerator,
+            ICellBehavior<T> cellBehavior, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
         {
             Updated = updated;
             Board = board;
-            Merge = merge;
-            Predictor = predictor;
-            BaseValue = baseValue;
             CellGenerator = cellGenerator;
+            _cellBehavior = cellBehavior;
         }
 
         public Board<T> Board { get; set; }
-        public UpdateLoop<T>.Merge Merge { get; set; }
-        public UpdateLoop<T>.Predictor Predictor { get; set; }
-        public T BaseValue { get; set; }
         public ICellGenerator<T> CellGenerator { get; set; }
 
         public void AddNew()
@@ -44,7 +42,7 @@ namespace Core_2048
             {
                 var prev = changeElementAction.Previous;
                 var next = changeElementAction.Next;
-                Board.Set(prev.Row, prev.Column, BaseValue)
+                Board.Set(prev.Row, prev.Column, _cellBehavior.GetCellBaseValue())
                     .Set(next);
                 updateMap.Add(prev, next);
             }
@@ -61,7 +59,7 @@ namespace Core_2048
             var innerEnd = isIncreasing ? innerCount - 1 : 0;
 
             return new UpdateLoop<T>(
-                BaseValue,
+                _cellBehavior,
                 DropFactory(isIncreasing),
                 GetterFactory(isAlongRow),
                 innerEnd,
@@ -73,9 +71,7 @@ namespace Core_2048
 
                     return minIndex <= index && index <= maxIndex;
                 },
-                Merge,
                 outerCount,
-                Predictor,
                 DropFactory(!isIncreasing)
             );
         }
