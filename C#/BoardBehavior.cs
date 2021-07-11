@@ -54,16 +54,24 @@ namespace Core_2048
             var innerStart = isIncreasing ? 0 : innerCount - 1;
             var innerEnd = isIncreasing ? innerCount - 1 : 0;
 
-            return UpdateLoop<T>.Builder()
-                .SetDrop(DropFactory(isIncreasing))
-                .SetReverseDrop(DropFactory(!isIncreasing))
-                .SetGetter(GetterFactory(isAlongRow))
-                .SetMerge(Merge)
-                .SetPredictor(Predictor)
-                .SetBaseValue(BaseValue)
-                .SetOuterCount(outerCount)
-                .SetInnerCondition(innerStart, innerEnd)
-                .Build();
+            return new UpdateLoop<T>(
+                BaseValue,
+                DropFactory(isIncreasing),
+                GetterFactory(isAlongRow),
+                innerEnd,
+                innerStart,
+                index =>
+                {
+                    var minIndex = Math.Min(innerStart, innerEnd);
+                    var maxIndex = Math.Max(innerStart, innerEnd);
+
+                    return minIndex <= index && index <= maxIndex;
+                },
+                Merge,
+                outerCount,
+                Predictor,
+                DropFactory(!isIncreasing)
+            );
         }
 
         public UpdateLoop<T>.Drop DropFactory(bool isIncreasing)
