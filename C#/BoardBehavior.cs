@@ -8,9 +8,15 @@ namespace Core_2048
     {
         public Action<Dictionary<Cell<T>, Cell<T>>> Updated;
 
-        public BoardBehavior(Board<T> board)
+        public BoardBehavior(Board<T> board, UpdateLoop<T>.Merge merge, UpdateLoop<T>.Predictor predictor, T baseValue,
+            ICellGenerator<T> cellGenerator, Action<Dictionary<Cell<T>, Cell<T>>> updated = null)
         {
+            Updated = updated;
             Board = board;
+            Merge = merge;
+            Predictor = predictor;
+            BaseValue = baseValue;
+            CellGenerator = cellGenerator;
         }
 
         public Board<T> Board { get; set; }
@@ -97,70 +103,6 @@ namespace Core_2048
                     Value = Board.Get(innerItem, outerItem)
                 };
         }
-
-        #region Builder
-
-        public static CoreBuilder Builder()
-        {
-            return new CoreBuilder();
-        }
-
-        public class CoreBuilder
-        {
-            private Board<T> _board;
-            private UpdateLoop<T>.Merge _merge;
-            private UpdateLoop<T>.Predictor _predictor;
-            private T _baseValue;
-            private ICellGenerator<T> _cellGenerator;
-
-            public CoreBuilder SetBoard(Board<T> board)
-            {
-                _board = board;
-
-                return this;
-            }
-
-            public CoreBuilder SetMerge(UpdateLoop<T>.Merge merge)
-            {
-                _merge = merge;
-
-                return this;
-            }
-
-            public CoreBuilder SetPredictor(UpdateLoop<T>.Predictor predictor)
-            {
-                _predictor = predictor;
-
-                return this;
-            }
-
-            public CoreBuilder SetBaseValue(T baseValue)
-            {
-                _baseValue = baseValue;
-
-                return this;
-            }
-
-            public CoreBuilder SetElementGenerator(ICellGenerator<T> cellGenerator)
-            {
-                _cellGenerator = cellGenerator;
-
-                return this;
-            }
-
-            public BoardBehavior<T> Build()
-            {
-                return new BoardBehavior<T>(_board)
-                {
-                    Merge = _merge,
-                    Predictor = _predictor,
-                    BaseValue = _baseValue,
-                    CellGenerator = _cellGenerator
-                };
-            }
-        }
-
-        #endregion
     }
 
 }

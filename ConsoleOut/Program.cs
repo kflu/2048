@@ -15,13 +15,13 @@ namespace ConsoleOut
                 .Build();
             elementGenerator.AddToPool(2, 95);
             elementGenerator.AddToPool(4, 5);
-            var app = BoardBehavior<ulong>.Builder()
-                .SetBoard(board)
-                .SetBaseValue(0)
-                .SetMerge((value, oldValue) => value + oldValue)
-                .SetPredictor((current, target) => current == target)
-                .SetElementGenerator(elementGenerator)
-                .Build();
+            var app = new BoardBehavior<ulong>(
+                board,
+                (value, oldValue) => value + oldValue,
+                (current, target) => current == target,
+                0,
+                elementGenerator
+            );
             app.AddNew();
             app.Updated += elements =>
             {
