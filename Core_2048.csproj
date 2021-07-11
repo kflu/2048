@@ -41,8 +41,8 @@
         <Compile Include="C#\BoardHelper.cs" />
         <Compile Include="C#\BoardBehavior.cs" />
         <Compile Include="C#\Cell.cs" />
-        <Compile Include="C#\IElementGenerator.cs" />
-        <Compile Include="C#\RandomElementGenerator.cs" />
+        <Compile Include="C#\ICellGenerator.cs" />
+        <Compile Include="C#\RandomCellGenerator.cs" />
         <Compile Include="C#\UpdateLoop.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>

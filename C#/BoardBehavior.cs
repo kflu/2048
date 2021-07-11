@@ -17,11 +17,11 @@ namespace Core_2048
         public UpdateLoop<T>.Merge Merge { get; set; }
         public UpdateLoop<T>.Predictor Predictor { get; set; }
         public T BaseValue { get; set; }
-        public IElementGenerator<T> ElementGenerator { get; set; }
+        public ICellGenerator<T> CellGenerator { get; set; }
 
         public void AddNew()
         {
-            var element = ElementGenerator.GetNewElement(Board);
+            var element = CellGenerator.GetNewElement(Board);
             if (element == null)
             {
                 return;
@@ -103,7 +103,7 @@ namespace Core_2048
             private UpdateLoop<T>.Merge _merge;
             private UpdateLoop<T>.Predictor _predictor;
             private T _baseValue;
-            private IElementGenerator<T> _elementGenerator;
+            private ICellGenerator<T> _cellGenerator;
 
             public CoreBuilder SetBoard(Board<T> board)
             {
@@ -133,9 +133,9 @@ namespace Core_2048
                 return this;
             }
 
-            public CoreBuilder SetElementGenerator(IElementGenerator<T> elementGenerator)
+            public CoreBuilder SetElementGenerator(ICellGenerator<T> cellGenerator)
             {
-                _elementGenerator = elementGenerator;
+                _cellGenerator = cellGenerator;
 
                 return this;
             }
@@ -147,7 +147,7 @@ namespace Core_2048
                     Merge = _merge,
                     Predictor = _predictor,
                     BaseValue = _baseValue,
-                    ElementGenerator = _elementGenerator
+                    CellGenerator = _cellGenerator
                 };
             }
         }

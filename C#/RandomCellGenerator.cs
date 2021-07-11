@@ -5,7 +5,7 @@ using System.Linq;
 namespace Core_2048
 {
 
-    public class RandomElementGenerator<T> : IElementGenerator<T>
+    public class RandomCellGenerator<T> : ICellGenerator<T>
     {
         private readonly Dictionary<T, int> _pool = new Dictionary<T, int>();
 
@@ -78,9 +78,9 @@ namespace Core_2048
                 return this;
             }
 
-            public RandomElementGenerator<T> Build()
+            public RandomCellGenerator<T> Build()
             {
-                return new RandomElementGenerator<T>
+                return new RandomCellGenerator<T>
                 {
                     _emptyChecker = _emptyChecker
                 };
