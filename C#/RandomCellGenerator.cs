@@ -8,10 +8,15 @@ namespace Core_2048
     public class RandomCellGenerator<T> : ICellGenerator<T>
     {
         private readonly Dictionary<T, int> _pool = new Dictionary<T, int>();
-
         private readonly Random _random = new Random();
+        private readonly Predicate<T> _emptyChecker;
+
         private int _allPercentage;
-        private Predicate<T> _emptyChecker;
+
+        public RandomCellGenerator(Predicate<T> emptyChecker)
+        {
+            _emptyChecker = emptyChecker;
+        }
 
         public Cell<T> GetNewElement(Board<T> board)
         {
@@ -59,35 +64,6 @@ namespace Core_2048
             var percentage = _pool.Count != 0 ? _allPercentage / _pool.Count : 1;
             AddToPool(value, percentage);
         }
-
-        #region Builder
-
-        public static GeneratorBuilder Builder()
-        {
-            return new GeneratorBuilder();
-        }
-
-        public class GeneratorBuilder
-        {
-            private Predicate<T> _emptyChecker;
-
-            public GeneratorBuilder SetEmptyChecker(Predicate<T> emptyChecker)
-            {
-                _emptyChecker = emptyChecker;
-
-                return this;
-            }
-
-            public RandomCellGenerator<T> Build()
-            {
-                return new RandomCellGenerator<T>
-                {
-                    _emptyChecker = _emptyChecker
-                };
-            }
-        }
-
-        #endregion
     }
 
 }
