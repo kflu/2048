@@ -5,36 +5,44 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public partial class Core<T>
+    public partial class BoardBehavior<T>
     {
-        internal class UpdateLoop : IEnumerable<ChangeElementAction>
+        private class UpdateLoop : IEnumerable<ChangeElementAction>
         {
-            private readonly UpdateBehavior _updateBehavior;
-            private readonly IValueBehavior _valueBehavior;
+            private readonly ICellBehavior<T> _cellBehavior;
+            private readonly Board<T> _board;
+            private readonly bool _isIncreasing;
+            private readonly bool _isAlongRow;
 
-            public UpdateLoop(UpdateBehavior updateBehavior, IValueBehavior valueBehavior)
+            private int OuterCount => _isAlongRow ? _board.Height : _board.Width;
+            private int InnerCount => _isIncreasing ? _board.Width : _board.Height;
+
+            private int InnerStart => _isIncreasing ? 0 : InnerCount - 1;
+            private int InnerEnd => _isIncreasing ? InnerCount - 1 : 0;
+
+            public UpdateLoop(ICellBehavior<T> cellBehavior, Board<T> board, bool isAlongRow, bool isIncreasing)
             {
-                _updateBehavior = updateBehavior ?? throw new ArgumentNullException(nameof(updateBehavior));
-                _valueBehavior = valueBehavior ?? throw new ArgumentNullException(nameof(valueBehavior));
+                _cellBehavior = cellBehavior ?? throw new ArgumentNullException(nameof(cellBehavior));
+                _board = board ?? throw new ArgumentNullException(nameof(board));
+                _isAlongRow = isAlongRow;
+                _isIncreasing = isIncreasing;
             }
 
             public IEnumerator<ChangeElementAction> GetEnumerator()
             {
-                for (var outerItem = 0; outerItem < _updateBehavior.OuterCount; outerItem++)
+                for (var outerItem = 0; outerItem < OuterCount; outerItem++)
                 {
-                    for (var innerItem = _updateBehavior.InnerStart;
-                         _updateBehavior.IsInnerCondition(innerItem);
-                         innerItem = _updateBehavior.ReverseDrop(innerItem))
+                    for (var innerItem = InnerStart; IsInnerCondition(innerItem); innerItem = ReverseDrop(innerItem))
                     {
-                        if (_valueBehavior.IsBase(_updateBehavior.Get(outerItem, innerItem).Value))
+                        if (_cellBehavior.IsBaseCell(Get(outerItem, innerItem)))
                         {
                             continue;
                         }
 
                         var newInnerItem = CalculateNewItem(innerItem, outerItem);
-                        var isMerge = _updateBehavior.IsInnerCondition(newInnerItem) && _valueBehavior.IsMerge(
-                            _updateBehavior.Get(outerItem, newInnerItem).Value,
-                            _updateBehavior.Get(outerItem, innerItem).Value
+                        var isMerge = IsInnerCondition(newInnerItem) && _cellBehavior.IsMergeCells(
+                            Get(outerItem, newInnerItem),
+                            Get(outerItem, innerItem)
                         );
 
                         yield return isMerge
@@ -51,14 +59,14 @@ namespace Core_2048
 
             private ChangeElementAction ExecuteWithMerge(int outerItem, int innerItem, int newInnerItem)
             {
-                var previous = _updateBehavior.Get(outerItem, innerItem);
-                var next = _updateBehavior.Get(outerItem, newInnerItem);
+                var previous = Get(outerItem, innerItem);
+                var newElement = Get(outerItem, newInnerItem);
 
-                next = new Element
+                var next = new Cell<T>
                 {
-                    Row = next.Row,
-                    Column = next.Column,
-                    Value = _valueBehavior.Merge(previous.Value, next.Value)
+                    Row = newElement.Row,
+                    Column = newElement.Column,
+                    Value = _cellBehavior.MergeCells(previous, newElement)
                 };
 
                 return new ChangeElementAction
@@ -70,14 +78,14 @@ namespace Core_2048
 
             private ChangeElementAction ExecuteWithoutMerge(int outerItem, int innerItem, int newInnerItem)
             {
-                newInnerItem = _updateBehavior.ReverseDrop(newInnerItem);
-                var previous = _updateBehavior.Get(outerItem, innerItem);
-                var next = _updateBehavior.Get(outerItem, newInnerItem);
+                newInnerItem = ReverseDrop(newInnerItem);
+                var previous = Get(outerItem, innerItem);
+                var newElement = Get(outerItem, newInnerItem);
 
-                next = new Element
+                var next = new Cell<T>
                 {
-                    Row = next.Row,
-                    Column = next.Column,
+                    Row = newElement.Row,
+                    Column = newElement.Column,
                     Value = previous.Value
                 };
 
@@ -93,11 +101,35 @@ namespace Core_2048
                 var newInnerItem = innerItem;
                 do
                 {
-                    newInnerItem = _updateBehavior.Drop(newInnerItem);
-                } while (_updateBehavior.IsInnerCondition(newInnerItem) &&
-                         _valueBehavior.IsBase(_updateBehavior.Get(outerItem, newInnerItem).Value));
+                    newInnerItem = Drop(newInnerItem);
+                } while (IsInnerCondition(newInnerItem) && _cellBehavior.IsBaseCell(Get(outerItem, newInnerItem)));
 
                 return newInnerItem;
+            }
+
+            private Cell<T> Get(int outerItem, int innerItem)
+            {
+                return _isAlongRow
+                    ? new Cell<T> { Row = outerItem, Column = innerItem, Value = _board.Get(outerItem, innerItem) }
+                    : new Cell<T> { Row = innerItem, Column = outerItem, Value = _board.Get(innerItem, outerItem) };
+            }
+
+            private int Drop(int innerIndex)
+            {
+                return _isIncreasing ? innerIndex - 1 : innerIndex + 1;
+            }
+
+            private int ReverseDrop(int innerIndex)
+            {
+                return !_isIncreasing ? innerIndex - 1 : innerIndex + 1;
+            }
+
+            private bool IsInnerCondition(int index)
+            {
+                var minIndex = Math.Min(InnerStart, InnerEnd);
+                var maxIndex = Math.Max(InnerStart, InnerEnd);
+
+                return minIndex <= index && index <= maxIndex;
             }
         }
     }

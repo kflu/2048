@@ -5,14 +5,11 @@ using System.Linq;
 namespace Core_2048
 {
 
-    public partial class Core<T>
+    public static class BoardHelper<T>
     {
-        public static class BoardHelper
+        public static IEnumerable<Cell<T>> GetEmpties(Board<T> board, Predicate<T> emptyChecker)
         {
-            public static IEnumerable<Element> GetEmpties(Board board, Predicate<T> emptyChecker)
-            {
-                return board.Where(value => emptyChecker.Invoke(value.Value));
-            }
+            return board.Where(value => emptyChecker.Invoke(value.Value));
         }
     }
 
