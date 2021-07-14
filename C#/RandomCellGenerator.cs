@@ -5,15 +5,20 @@ using System.Linq;
 namespace Core_2048
 {
 
-    public class RandomElementGenerator<T> : IElementGenerator<T>
+    public class RandomCellGenerator<T> : ICellGenerator<T>
     {
         private readonly Dictionary<T, int> _pool = new Dictionary<T, int>();
-
         private readonly Random _random = new Random();
-        private int _allPercentage;
-        private Predicate<T> _emptyChecker;
+        private readonly Predicate<T> _emptyChecker;
 
-        public Element<T> GetNewElement(Board<T> board)
+        private int _allPercentage;
+
+        public RandomCellGenerator(Predicate<T> emptyChecker)
+        {
+            _emptyChecker = emptyChecker;
+        }
+
+        public Cell<T> GetNewElement(Board<T> board)
         {
             var empties = BoardHelper<T>.GetEmpties(board, _emptyChecker).ToList();
             if (empties.Count == 0)
@@ -40,11 +45,12 @@ namespace Core_2048
                 where predicate.Invoke(resultPercentage)
                 select element;
 
-            return Element<T>.Builder()
-                .SetRow(randomPosition.Row)
-                .SetColumn(randomPosition.Column)
-                .SetValue(resultElements.First())
-                .Build();
+            return new Cell<T>
+            {
+                Row = randomPosition.Row,
+                Column = randomPosition.Column,
+                Value = resultElements.First()
+            };
         }
 
         public void AddToPool(T value, int percentage)
@@ -58,37 +64,6 @@ namespace Core_2048
             var percentage = _pool.Count != 0 ? _allPercentage / _pool.Count : 1;
             AddToPool(value, percentage);
         }
-
-        #region Builder
-
-        public static GeneratorBuilder Builder()
-        {
-            return new GeneratorBuilder();
-        }
-
-        public class GeneratorBuilder
-        {
-            private Predicate<T> _emptyChecker;
-
-            public GeneratorBuilder SetEmptyChecker(Predicate<T> emptyChecker)
-            {
-                _emptyChecker = emptyChecker;
-
-                return this;
-            }
-
-            public RandomElementGenerator<T> Build()
-            {
-                return new RandomElementGenerator<T>
-                {
-                    _emptyChecker = _emptyChecker
-                };
-            }
-        }
-
-        #endregion
     }
-
-    public class RandomElementGenerator : RandomElementGenerator<ulong> { }
 
 }

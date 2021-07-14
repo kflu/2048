@@ -9,26 +9,18 @@ namespace ConsoleOut
     {
         public static void Main(string[] args)
         {
-            var board = new Board(4, 4, 0);
-            var elementGenerator = RandomElementGenerator.Builder()
-                .SetEmptyChecker(element => element == 0)
-                .Build();
+            var board = new Board<ulong>(4, 4, () => 0);
+            var elementGenerator = new RandomCellGenerator<ulong>(element => element == 0);
             elementGenerator.AddToPool(2, 95);
             elementGenerator.AddToPool(4, 5);
-            var app = Core.Builder()
-                .SetBoard(board)
-                .SetBaseValue(0)
-                .SetMerge((value, oldValue) => value + oldValue)
-                .SetPredictor((current, target) => current == target)
-                .SetElementGenerator(elementGenerator)
-                .Build();
+            var app = new BoardBehavior<ulong>(board, elementGenerator, new BaseCellBehavior());
             app.AddNew();
-            app.Updated += elements =>
+            app.AddUpdatedListener(elements =>
             {
                 app.AddNew();
-                Render(app);
-            };
-            Render(app);
+                Render(board);
+            });
+            Render(board);
             while (true)
             {
                 var direction = Input();
@@ -43,12 +35,12 @@ namespace ConsoleOut
             }
         }
 
-        private static void Render(Core<ulong> app)
+        private static void Render(Board<ulong> board)
         {
             Console.Clear();
             var prevRow = -1;
             var pattern = new Func<ulong, string>(value => $"  {value}  |");
-            app.Board.ForEach((value, row, column) =>
+            board.ForEach((value, row, column) =>
             {
                 var cell = pattern(value);
                 if (prevRow == row)
@@ -81,6 +73,36 @@ namespace ConsoleOut
                 default:
                     return null;
             }
+        }
+    }
+
+    internal class BaseCellBehavior : ICellBehavior<ulong>
+    {
+        private readonly ulong _baseValue;
+
+        public BaseCellBehavior(ulong baseValue = 0)
+        {
+            _baseValue = baseValue;
+        }
+
+        public bool IsBaseCell(Cell<ulong> cell)
+        {
+            return cell.Value == _baseValue;
+        }
+
+        public bool IsMergeCells(Cell<ulong> previous, Cell<ulong> next)
+        {
+            return previous.Value == next.Value;
+        }
+
+        public ulong MergeCells(Cell<ulong> previous, Cell<ulong> next)
+        {
+            return previous.Value + next.Value;
+        }
+
+        public ulong GetCellBaseValue()
+        {
+            return _baseValue;
         }
     }
 

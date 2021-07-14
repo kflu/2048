@@ -5,222 +5,133 @@ using System.Collections.Generic;
 namespace Core_2048
 {
 
-    public class UpdateLoop<T> : IEnumerable<UpdateLoop<T>.ChangeElementAction>
+    public partial class BoardBehavior<T>
     {
-        public delegate int Drop(int index);
-
-        public delegate Element<T> Get(int outerItem, int innerItem);
-
-        public delegate bool IsInnerCondition(int index);
-
-        public delegate T Merge(T newValue, T oldValue);
-
-        public delegate bool Predictor(T current, T target);
-
-        private T _baseValue;
-
-        private Drop _drop;
-        private Get _get;
-        private int _innerEnd;
-        private int _innerStart;
-        private IsInnerCondition _isInnerCondition;
-        private Merge _merge;
-
-        private int _outerCount;
-
-        private Predictor _predictor;
-        private Drop _reverseDrop;
-
-        public IEnumerator<ChangeElementAction> GetEnumerator()
+        private class UpdateLoop : IEnumerable<ChangeElementAction>
         {
-            for (var outerItem = 0; outerItem < _outerCount; outerItem++)
+            private readonly ICellBehavior<T> _cellBehavior;
+            private readonly Board<T> _board;
+            private readonly bool _isIncreasing;
+            private readonly bool _isAlongRow;
+
+            private int OuterCount => _isAlongRow ? _board.Height : _board.Width;
+            private int InnerCount => _isIncreasing ? _board.Width : _board.Height;
+
+            private int InnerStart => _isIncreasing ? 0 : InnerCount - 1;
+            private int InnerEnd => _isIncreasing ? InnerCount - 1 : 0;
+
+            public UpdateLoop(ICellBehavior<T> cellBehavior, Board<T> board, bool isAlongRow, bool isIncreasing)
             {
-                for (var innerItem = _innerStart; _isInnerCondition(innerItem); innerItem = _reverseDrop(innerItem))
+                _cellBehavior = cellBehavior ?? throw new ArgumentNullException(nameof(cellBehavior));
+                _board = board ?? throw new ArgumentNullException(nameof(board));
+                _isAlongRow = isAlongRow;
+                _isIncreasing = isIncreasing;
+            }
+
+            public IEnumerator<ChangeElementAction> GetEnumerator()
+            {
+                for (var outerItem = 0; outerItem < OuterCount; outerItem++)
                 {
-                    if (Equals(_get(outerItem, innerItem).Value, _baseValue))
+                    for (var innerItem = InnerStart; IsInnerCondition(innerItem); innerItem = ReverseDrop(innerItem))
                     {
-                        continue;
+                        if (_cellBehavior.IsBaseCell(Get(outerItem, innerItem)))
+                        {
+                            continue;
+                        }
+
+                        var newInnerItem = CalculateNewItem(innerItem, outerItem);
+                        var isMerge = IsInnerCondition(newInnerItem) && _cellBehavior.IsMergeCells(
+                            Get(outerItem, newInnerItem),
+                            Get(outerItem, innerItem)
+                        );
+
+                        yield return isMerge
+                            ? ExecuteWithMerge(outerItem, innerItem, newInnerItem)
+                            : ExecuteWithoutMerge(outerItem, innerItem, newInnerItem);
                     }
-
-                    var newInnerItem = CalculateNewItem(innerItem, outerItem);
-                    var isMerge = _isInnerCondition(newInnerItem) && _predictor(
-                        _get(outerItem, newInnerItem).Value,
-                        _get(outerItem, innerItem).Value
-                    );
-
-                    yield return isMerge
-                        ? ExecuteWithMerge(outerItem, innerItem, newInnerItem)
-                        : ExecuteWithoutMerge(outerItem, innerItem, newInnerItem);
                 }
             }
-        }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        private ChangeElementAction ExecuteWithMerge(int outerItem, int innerItem, int newInnerItem)
-        {
-            var previous = _get(outerItem, innerItem);
-            var newElement = _get(outerItem, newInnerItem);
-
-            var next = Element<T>.Builder()
-                .SetRow(newElement.Row)
-                .SetColumn(newElement.Column)
-                .SetValue(_merge(newElement.Value, previous.Value))
-                .Build();
-
-            return new ChangeElementAction
+            IEnumerator IEnumerable.GetEnumerator()
             {
-                Previous = previous,
-                Next = next
-            };
-        }
-
-        private ChangeElementAction ExecuteWithoutMerge(int outerItem, int innerItem, int newInnerItem)
-        {
-            newInnerItem = _reverseDrop(newInnerItem);
-            var previous = _get(outerItem, innerItem);
-            var newElement = _get(outerItem, newInnerItem);
-
-            var next = Element<T>.Builder()
-                .SetRow(newElement.Row)
-                .SetColumn(newElement.Column)
-                .SetValue(previous.Value)
-                .Build();
-
-            return new ChangeElementAction
-            {
-                Previous = previous,
-                Next = next
-            };
-        }
-
-        private int CalculateNewItem(int innerItem, int outerItem)
-        {
-            var newInnerItem = innerItem;
-            do
-            {
-                newInnerItem = _drop(newInnerItem);
-            } while (_isInnerCondition(newInnerItem) && Equals(_get(outerItem, newInnerItem).Value, _baseValue));
-
-            return newInnerItem;
-        }
-
-        public class ChangeElementAction
-        {
-            public Element<T> Next;
-            public Element<T> Previous;
-        }
-
-        #region Builder
-
-        public static UpdateLoopBuilder Builder()
-        {
-            return new UpdateLoopBuilder();
-        }
-
-        public class UpdateLoopBuilder
-        {
-            private T _baseValue;
-            private Drop _drop;
-            private Get _get;
-            private int _innerEnd;
-            private int _innerStart;
-            private IsInnerCondition _isInnerCondition;
-            private Merge _merge;
-
-            private int _outerCount;
-
-            private Predictor _predictor;
-            private Drop _reverseDrop;
-
-            public UpdateLoopBuilder SetDrop(Drop drop)
-            {
-                _drop = drop;
-
-                return this;
+                return GetEnumerator();
             }
 
-            public UpdateLoopBuilder SetReverseDrop(Drop reverseDrop)
+            private ChangeElementAction ExecuteWithMerge(int outerItem, int innerItem, int newInnerItem)
             {
-                _reverseDrop = reverseDrop;
+                var previous = Get(outerItem, innerItem);
+                var newElement = Get(outerItem, newInnerItem);
 
-                return this;
-            }
-
-            public UpdateLoopBuilder SetMerge(Merge merge)
-            {
-                _merge = merge;
-
-                return this;
-            }
-
-            public UpdateLoopBuilder SetGetter(Get get)
-            {
-                _get = get;
-
-                return this;
-            }
-
-            public UpdateLoopBuilder SetPredictor(Predictor predictor)
-            {
-                _predictor = predictor;
-
-                return this;
-            }
-
-            public UpdateLoopBuilder SetOuterCount(int outerCount)
-            {
-                _outerCount = outerCount;
-
-                return this;
-            }
-
-            public UpdateLoopBuilder SetInnerCondition(int innerStart, int innerEnd)
-            {
-                _isInnerCondition = index =>
+                var next = new Cell<T>
                 {
-                    var minIndex = Math.Min(innerStart, innerEnd);
-                    var maxIndex = Math.Max(innerStart, innerEnd);
-
-                    return minIndex <= index && index <= maxIndex;
+                    Row = newElement.Row,
+                    Column = newElement.Column,
+                    Value = _cellBehavior.MergeCells(previous, newElement)
                 };
-                _innerStart = innerStart;
-                _innerEnd = innerEnd;
 
-                return this;
-            }
-
-            public UpdateLoopBuilder SetBaseValue(T baseValue)
-            {
-                _baseValue = baseValue;
-
-                return this;
-            }
-
-            public UpdateLoop<T> Build()
-            {
-                return new UpdateLoop<T>
+                return new ChangeElementAction
                 {
-                    _drop = _drop,
-                    _reverseDrop = _reverseDrop,
-                    _merge = _merge,
-                    _get = _get,
-                    _outerCount = _outerCount,
-                    _isInnerCondition = _isInnerCondition,
-                    _innerStart = _innerStart,
-                    _innerEnd = _innerEnd,
-                    _predictor = _predictor,
-                    _baseValue = _baseValue
+                    Previous = previous,
+                    Next = next
                 };
             }
-        }
 
-        #endregion
+            private ChangeElementAction ExecuteWithoutMerge(int outerItem, int innerItem, int newInnerItem)
+            {
+                newInnerItem = ReverseDrop(newInnerItem);
+                var previous = Get(outerItem, innerItem);
+                var newElement = Get(outerItem, newInnerItem);
+
+                var next = new Cell<T>
+                {
+                    Row = newElement.Row,
+                    Column = newElement.Column,
+                    Value = previous.Value
+                };
+
+                return new ChangeElementAction
+                {
+                    Previous = previous,
+                    Next = next
+                };
+            }
+
+            private int CalculateNewItem(int innerItem, int outerItem)
+            {
+                var newInnerItem = innerItem;
+                do
+                {
+                    newInnerItem = Drop(newInnerItem);
+                } while (IsInnerCondition(newInnerItem) && _cellBehavior.IsBaseCell(Get(outerItem, newInnerItem)));
+
+                return newInnerItem;
+            }
+
+            private Cell<T> Get(int outerItem, int innerItem)
+            {
+                return _isAlongRow
+                    ? new Cell<T> { Row = outerItem, Column = innerItem, Value = _board.Get(outerItem, innerItem) }
+                    : new Cell<T> { Row = innerItem, Column = outerItem, Value = _board.Get(innerItem, outerItem) };
+            }
+
+            private int Drop(int innerIndex)
+            {
+                return _isIncreasing ? innerIndex - 1 : innerIndex + 1;
+            }
+
+            private int ReverseDrop(int innerIndex)
+            {
+                return !_isIncreasing ? innerIndex - 1 : innerIndex + 1;
+            }
+
+            private bool IsInnerCondition(int index)
+            {
+                var minIndex = Math.Min(InnerStart, InnerEnd);
+                var maxIndex = Math.Max(InnerStart, InnerEnd);
+
+                return minIndex <= index && index <= maxIndex;
+            }
+        }
     }
-
-    public class UpdateLoop : UpdateLoop<ulong> { }
 
 }
