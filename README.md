@@ -1,4 +1,4 @@
-2048  [![Nuget](https://img.shields.io/nuget/v/Core_2048)](https://www.nuget.org/packages/Core_2048)
+2048  [![Nuget](https://img.shields.io/nuget/v/Core_2048)](https://www.nuget.org/packages/Core_2048) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/VladShyrokyi/2048-1)](https://github.com/VladShyrokyi/2048-1)
 ====
 
 My take mini sdk libs for creating the 2048 game in C#. Suitable for any engine from console app to Unity game. Only
